@@ -91,6 +91,6 @@ parameter_variables<- function(run){
   
   microbe_loss_factor_when_no_fauna <- parvar$microbe_loss_factor_when_no_fauna[run]
   
-  return(list(delta_t, max_t, aquifer_depth, import_MO_het, scenario_with_1_or_without_0_fauna, scenario_with_1_or_without_0_MO, carboxylic_acids_fraction, acetic_acids_fraction, mortalityRate, import_fauna, yield_ac, yield_MO, K_MO_at_temp, rMO_BOC_uptake_per_day_at_lab_temperature, rFauna_MO_uptake_per_day_at_TEMP, k1, excretionRate, TOC_COD_mol_m2_yr_precipitation,      RECHARGE_COD_mol_per_m3_per_day_df, k_temp, K_ac, growth_model_MO_type, growth_model_fauna_type, mortalityFraction_per_degree, microbe_loss_factor_when_no_fauna))
+  return(list(delta_t, max_t, aquifer_depth, import_MO_het, scenario_with_1_or_without_0_fauna, scenario_with_1_or_without_0_MO, acetic_acids_fraction, mortalityRate, import_fauna, yield_ac, yield_MO, K_MO_at_temp, rMO_BOC_uptake_per_day_at_lab_temperature, rFauna_MO_uptake_per_day_at_TEMP, k1, excretionRate, TOC_COD_mol_m2_yr_precipitation,      RECHARGE_COD_mol_per_m3_per_day_df, k_temp, K_ac, growth_model_MO_type, growth_model_fauna_type, mortalityFraction_per_degree, microbe_loss_factor_when_no_fauna))
 }
 
