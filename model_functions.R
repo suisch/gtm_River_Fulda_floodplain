@@ -10,10 +10,10 @@ dBOC_from_detritus_dt    <- function(k1, DETRITUS_ti_minus_1 ) {
 }
 
 
-# detritus at time step is the result of Detritus from the preious time step, plus detritus recharged from precipitation minus what is broken down to BDC, plus Import from freshly dead biomass (mortality). 
-dDETRITUS_dt    = function(k1, DETRITUS_ti_minus_1 ,RECHARGE_BOC_mol_per_L_per_day_df_ti , Mortality) {
+# detritus at time step is the result of Detritus from the preious time step, plus detritus recharged from precipitation minus what is broken down to BOC, plus Import from freshly dead biomass (mortality). 
+dDETRITUS_dt    = function(k1, DETRITUS_ti_minus_1 ,RECHARGE_COD_mol_per_L_per_day_df_ti , Mortality) {
   Detritus_broken_down_ti <- dBOC_from_detritus_dt(k1, DETRITUS_ti_minus_1)
- DETRITUS_ti <- DETRITUS_ti_minus_1 - Detritus_broken_down_ti + RECHARGE_BOC_mol_per_L_per_day_df_ti + Mortality 
+ DETRITUS_ti <- DETRITUS_ti_minus_1 - Detritus_broken_down_ti + RECHARGE_COD_mol_per_L_per_day_df_ti + Mortality 
   return(DETRITUS_ti)
 }
 
