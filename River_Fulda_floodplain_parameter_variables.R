@@ -8,11 +8,14 @@ parameter_variables<- function(run){
   
   max_t          = as.Date(parvar$max_t[run], origin = "1899-12-30") #date - depends on operating system!! 
   
+  
   #depth of gw aquifer
   aquifer_depth <- parvar$aquifer_depth[run] #m
   
   #dummy; for further developments
   import_MO_het <- parvar$import_MO_het[run] #
+  
+  scenario_with_1_or_without_0_MO<- parvar$scenario_with_1_or_without_0_MO[run]
   
   scenario_with_1_or_without_0_fauna <- parvar$scenario_with_1_or_without_0_fauna[run]  #1 for with fauna, or 0 for without fauna 
    
@@ -91,6 +94,6 @@ parameter_variables<- function(run){
   
   microbe_loss_factor_when_no_fauna <- parvar$microbe_loss_factor_when_no_fauna[run]
   
-  return(list(delta_t, max_t, aquifer_depth, import_MO_het, scenario_with_1_or_without_0_fauna, scenario_with_1_or_without_0_MO, acetic_acids_fraction, mortalityRate, import_fauna, yield_ac, yield_MO, K_MO_at_temp, rMO_BOC_uptake_per_day_at_lab_temperature, rFauna_MO_uptake_per_day_at_TEMP, k1, excretionRate, TOC_COD_mol_m2_yr_precipitation,      RECHARGE_COD_mol_per_m3_per_day_df, k_temp, K_ac, growth_model_MO_type, growth_model_fauna_type, mortalityFraction_per_degree, microbe_loss_factor_when_no_fauna))
+  return(list(delta_t, max_t, aquifer_depth, import_MO_het, scenario_with_1_or_without_0_fauna, scenario_with_1_or_without_0_MO, mortalityRate, import_fauna, yield_ac, yield_MO, K_MO_at_temp, rMO_BOC_uptake_per_day_at_lab_temperature, rFauna_MO_uptake_per_day_at_TEMP, k1, excretionRate, TOC_COD_mol_m2_yr_precipitation,      RECHARGE_COD_mol_per_m3_per_day_df, k_temp, K_ac, growth_model_MO_type, growth_model_fauna_type, mortalityFraction_per_degree, microbe_loss_factor_when_no_fauna))
 }
 
