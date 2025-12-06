@@ -5,5 +5,5 @@ Extension of this model to other questions and use cases is planned - please sta
 
 Original meteorological data (produkt_nieder_tag_19490101_20171231_01526.txt, produkt_tu_termin_18850101_20231231_01526.txt) were treated with script Fulda_gw_temperature_extrapolation.R and the product of that, Fulda_daily_temp_joh_long.txt, are used in the actual model.
 
-groundwater_trophic_model.R is the main work horse and calls other functions, variables, and parameters available from, and called from, this repository.
+groundwater_trophic_model.R is the main work horse from v.1.0.0, used in the preprint  and calls other functions, variables, and parameters available from, and called from, this repository.
 
