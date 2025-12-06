@@ -1,6 +1,6 @@
 
 
-fulda_variables<- function(run, factor_CC_MO, factor_CC_fauna){
+fulda_variables <- function(run, factor_CC_MO, factor_CC_fauna){
   
   
   ##########
@@ -43,12 +43,21 @@ fulda_variables<- function(run, factor_CC_MO, factor_CC_fauna){
   #
   #Fulda_daily_prec_per_year_average <- mean(Fulda_daily_prec_per_year$RS_yearly_sum, na.rm = TRUE)
   
+  #groundwater temperature
+  #see above urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/River_Fulda_floodplain_prec_plot.R"
+  #source(urlfiletext)
+  #path is derived in upstream file
+
+
+  urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/Fulda_daily_temp_joh_long.txt"
+  Fulda_daily_temp_joh_long <- read.table(urlfiletext,sep = " ", header = TRUE)   #written in River_Fulda_floodplain_gw_temperature_extrapolation.R in /Users/susanneschmidt/Documents/head/Arbeit/projects/git/gw_ecosystem_services/Fulda_plains/R_git
+  Fulda_daily_temp_joh_long$dateRi <- as.Date(Fulda_daily_temp_joh_long$dateRi)
+ 
   ##########
   # data - read in from Fulda data set
   ##########
   # divide the data set into the four groups that were developed for the Fulda floodplain in Marxsen et al. (2021)
   urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/kmeans_chem_4_seed7.txt"
-  
   kmeans_chem4_exchgroups <-read.table(urlfiletext, sep = " ", header = TRUE)#
   
   #with group 2 being Red: floodplain zone P = plume, P01, P04, P09
@@ -63,7 +72,6 @@ fulda_variables<- function(run, factor_CC_MO, factor_CC_fauna){
   urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/prokaryotes_deep_PerWellDepth_average.txt"
   Fuldaprokaryotes_deep_PerWellDepth_average  <- read.table(urlfiletext, sep = " ", header = TRUE)
   
-  
   urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/chem.txt"
   chem <- read.table(urlfiletext, sep = " ", header = TRUE)
   
@@ -77,7 +85,6 @@ fulda_variables<- function(run, factor_CC_MO, factor_CC_fauna){
   chem_ordered_per_date_1978_1981$total_Prok_mol_L <- chem_ordered_per_date_1978_1981$drymass_g_per_L / 24.6 
   
   #multiplying dry mass with dry masses' COD of 1.05 (see derivation in SI), which is the reaction of N being reduced to NH3, instead of NO3 - N being reduced to NH3 is more realistic in groundwater where dissolved oxygen is often (temporarily) limiting
-  
   #COD of respiring dry mass is 1.05 g O2, see SI
   chem_ordered_per_date_1978_1981$total_Prok_mol_COD_L <- chem_ordered_per_date_1978_1981$total_Prok_mol_L *1.05 
   
@@ -94,19 +101,19 @@ fulda_variables<- function(run, factor_CC_MO, factor_CC_fauna){
   
   chem_ordered_per_date_1978_1981 <- chem_ordered_per_date_1978_1981 %>%
     dplyr::filter(!is.na(kmeans4gr))
-  
+
   # calculating group-wise averages for start values of the simulation
   chem_ordered_per_date_1978_1981_mean_per_group <- chem_ordered_per_date_1978_1981 %>%
     dplyr::group_by(kmeans4gr) %>%
-    summarize(
+    dplyr::summarize(
       BOC_mol_COD_L = mean(BOC_mol_COD_L, na.rm = TRUE), 
       OS_mol_COD_L = mean(OS_mol_COD_L, na.rm =TRUE), 
       total_Prok_mol_COD_L = mean(total_Prok_mol_COD_L, na.rm =TRUE) )
   
   #calculate max per group for deriving carrying capacity 
-  chem_ordered_per_date_1978_1981_mean_per_group_max <- chem_ordered_per_date_1978_1981 %>%
+  chem_ordered_per_date_1978_1981_per_group_max <- chem_ordered_per_date_1978_1981 %>%
     dplyr::group_by(kmeans4gr) %>%
-    summarize(
+    dplyr::summarize(
       BOC_mol_COD_L_max = max(BOC_mol_COD_L, na.rm = TRUE),  
       OS_mol_COD_L_max =  max(OS_mol_COD_L, na.rm =TRUE), 
       OS_mol_COD_L_max =  max(OS_mol_COD_L, na.rm =TRUE),  
@@ -133,12 +140,12 @@ fulda_variables<- function(run, factor_CC_MO, factor_CC_fauna){
   #used for start values
   fauna_deep_PerSamplPerTaxon_bm_mean_per_group <- fauna_deep_PerSamplPerTaxonWide_bm_sum %>%
     dplyr::group_by(  kmeans4gr) %>%
-    reframe(bm_mol_COD_perL = mean(bm_mol_COD_perL, na.rm = TRUE))
+    dplyr::reframe(bm_mol_COD_perL = mean(bm_mol_COD_perL, na.rm = TRUE))
   
   #for deriving carrying capacity 
   fauna_deep_PerSamplPerTaxon_bm_mean_per_group_max <- fauna_deep_PerSamplPerTaxonWide_bm_sum %>%
     dplyr::group_by(kmeans4gr) %>%
-    reframe( bm_mol_COD_perL_max = max(bm_mol_COD_perL, na.rm = TRUE))
+    dplyr::reframe( bm_mol_COD_perL_max = max(bm_mol_COD_perL, na.rm = TRUE))
   
   ##########
   #derived parameters 
@@ -185,7 +192,7 @@ fulda_variables<- function(run, factor_CC_MO, factor_CC_fauna){
     MO_het_gr1_t0 <- MO_het_gr1_t0_all$total_Prok_mol_COD_L[1]
     
     #carrying capacity assumed is the max MO_het abundance measured plus 10% which never are seen in the field due to grazing, "mortality", etc.
-    MO_het_CC_gr1 <- chem_ordered_per_date_1978_1981_mean_per_group_max$total_Prok_mol_COD_L_max[chem_ordered_per_date_1978_1981_mean_per_group_max$kmeans4gr ==1]*factor_CC_MO
+    MO_het_CC_gr1 <- chem_ordered_per_date_1978_1981_per_group_max$total_Prok_mol_COD_L_max[chem_ordered_per_date_1978_1981_per_group_max$kmeans4gr ==1]*factor_CC_MO
   
     }else{
     MO_het_gr1_t0  = 0
@@ -246,7 +253,7 @@ fulda_variables<- function(run, factor_CC_MO, factor_CC_fauna){
     #which never are seen in the field due to grazing, "mortality", etc.
     
     
-    MO_het_CC_gr2 <- chem_ordered_per_date_1978_1981_mean_per_group_max$total_Prok_mol_COD_L_max[chem_ordered_per_date_1978_1981_mean_per_group_max$kmeans4gr ==2] *factor_CC_MO
+    MO_het_CC_gr2 <- chem_ordered_per_date_1978_1981_per_group_max$total_Prok_mol_COD_L_max[chem_ordered_per_date_1978_1981_per_group_max$kmeans4gr ==2] *factor_CC_MO
     
   }else{
     MO_het_gr2_t0  = 0
@@ -300,7 +307,7 @@ fulda_variables<- function(run, factor_CC_MO, factor_CC_fauna){
     MO_het_gr3_t0 <- MO_het_gr3_t0_all$total_Prok_mol_COD_L[1]
     
     
-    MO_het_CC_gr3 <- chem_ordered_per_date_1978_1981_mean_per_group_max$total_Prok_mol_COD_L_max[chem_ordered_per_date_1978_1981_mean_per_group_max$kmeans4gr ==3] *factor_CC_MO
+    MO_het_CC_gr3 <- chem_ordered_per_date_1978_1981_per_group_max$total_Prok_mol_COD_L_max[chem_ordered_per_date_1978_1981_per_group_max$kmeans4gr ==3] *factor_CC_MO
   }else{
     MO_het_gr3_t0  = 0
     MO_het_CC_gr3 <- 0
@@ -354,7 +361,7 @@ fulda_variables<- function(run, factor_CC_MO, factor_CC_fauna){
     MO_het_gr4_t0 <- MO_het_gr4_t0_all$total_Prok_mol_COD_L[1]
     
     #carrying capacity assumed is the max MO_het abundance measured plus 10% which never are seen in the field due to grazing, "mortality", etc.
-    MO_het_CC_gr4 <- chem_ordered_per_date_1978_1981_mean_per_group_max$total_Prok_mol_COD_L_max[chem_ordered_per_date_1978_1981_mean_per_group_max$kmeans4gr ==4] *factor_CC_MO
+    MO_het_CC_gr4 <- chem_ordered_per_date_1978_1981_per_group_max$total_Prok_mol_COD_L_max[chem_ordered_per_date_1978_1981_per_group_max$kmeans4gr ==4] *factor_CC_MO
   }else{
     MO_het_gr4_t0  = 0
     MO_het_CC_gr4 <- 0
@@ -380,7 +387,7 @@ fulda_variables<- function(run, factor_CC_MO, factor_CC_fauna){
   CC_table_MO <- as.data.frame(cbind(group = c(1:4), CC = c(MO_het_CC_gr1, MO_het_CC_gr2, MO_het_CC_gr3, MO_het_CC_gr4)))
   CC_table_fauna <- as.data.frame(cbind(group = c(1:4), CC = c(fauna_CC_gr1, fauna_CC_gr2, fauna_CC_gr3, fauna_CC_gr4)))
   
-  return(list(Fulda_daily_prec, Fulda_daily_temp_, chem_ordered_per_date_1978_1981, chem_ordered_per_date_1978_1981_mean_per_group, fauna_deep_PerSamplPerTaxonWide_bm_sum, fauna_deep_PerSamplPerTaxon_bm_mean_per_group, t_0, t_max, DETRITUS_gr1_t0, DETRITUS_gr2_t0, DETRITUS_gr3_t0, DETRITUS_gr4_t0, BOC_gr1_t0, BOC_gr2_t0, BOC_gr3_t0, BOC_gr4_t0, MO_het_gr1_t0, MO_het_gr2_t0, MO_het_gr3_t0, MO_het_gr4_t0, fauna_gr1_t0, fauna_gr2_t0, fauna_gr3_t0, fauna_gr4_t0,  CC_table_MO, CC_table_fauna) )
+  return(list(Fulda_daily_prec, Fulda_daily_temp_, chem_ordered_per_date_1978_1981, chem_ordered_per_date_1978_1981_mean_per_group, fauna_deep_PerSamplPerTaxonWide_bm_sum, fauna_deep_PerSamplPerTaxon_bm_mean_per_group, t_0, t_max, DETRITUS_gr1_t0, DETRITUS_gr2_t0, DETRITUS_gr3_t0, DETRITUS_gr4_t0, BOC_gr1_t0, BOC_gr2_t0, BOC_gr3_t0, BOC_gr4_t0, MO_het_gr1_t0, MO_het_gr2_t0, MO_het_gr3_t0, MO_het_gr4_t0, fauna_gr1_t0, fauna_gr2_t0, fauna_gr3_t0, fauna_gr4_t0,  CC_table_MO, CC_table_fauna, Fulda_daily_temp_joh_long) )
 
   
 }
