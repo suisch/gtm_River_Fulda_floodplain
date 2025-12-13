@@ -1,4 +1,4 @@
-# this code relies heavily on parcoord.R
+# this code relies heavily on parcoord.R https://www.rdocumentation.org/packages/MASS/versions/7.3-65/topics/parcoord
 parcoord_gtm <- 
 function (data, lower = NULL, upper = NULL, log = NULL, col = 1, 
     lty = 1, lwd = 1, plotorder = NULL, var.label = FALSE, col.axis = "darkgrey",
@@ -60,14 +60,6 @@ function (data, lower = NULL, upper = NULL, log = NULL, col = 1,
     par("mar" = mar) 
     #par("oma" = oma) 
     #par("mai" = mai) 
-
-#sis does not change anything
-#    op <- par(mfrow = c(2, 2), # 2 x 2 pictures on one plot
-#          pty = "s",
-#          par(mar = c(9,2,2,2)))
-#    par(op)
-    #error windows(par(mar = c(9,2,2,2)))
-
 
     if (var.label)
         mgp[2] <- mgp[2] + 1

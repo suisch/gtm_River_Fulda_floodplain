@@ -7,16 +7,32 @@ library(patchwork) #for sticking together different plots
 library(ggpubr)#ggarrange. 
 library(cowplot)
 library(colorspace)
+library(devtools)
 
 #install package for color blind-safe plots
 # install.packages("ggokabeito")
 # #You can alternatively install the development version of ggokabeito from GitHub with:
 #   devtools::install_github("malcolmbarrett/ggokabeito")
-library(ggokabeito) # #scale_fill_okabe_ito
+library(ggokabeito) # #scale_fill_okabe_ito 
 library(ggplot2)
 #install.packages("ggtext") #
 library(ggtext)#for exponents in ylab in ggplot
 
+
+#sensitivity analysis
+#### Step 1 (load the packages) ####
+
+library(caTools)
+#do once install.packages("http://www.maths.bris.ac.uk/~mazjcr/calibrater_0.51.tar.gz", repos = NULL, type = "source")
+library(calibrater)
+library(gridExtra)
+library(matrixStats)
+#do once install.packages("FRACTION")
+library(FRACTION)
+
+#do once install.packages("ps") #needed to install_github(SAFER)
+#do once install_github("SAFEtoolbox/SAFE-R")
+library(SAFER)
 
 rm(list = ls()) #remove any variables and data created before, to make sure that this runs with fresh data
 
@@ -50,6 +66,39 @@ source(urlfiletext)
 urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/River_Fulda_floodplain_prec_plot.R"
 source(urlfiletext)
 
+urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/gtm.r"
+source(urlfiletext)
+
+urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/gtm_sim.r"
+source(urlfiletext)
+
+urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/gtm_MulObj.r"
+source(urlfiletext)
+
+urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/gtm_MulOut.r"
+source(urlfiletext)
+
+urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/gtm_nse.r"
+source(urlfiletext)
+
+urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/model_execution_gtm.r"
+source(urlfiletext)
+
+urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/scatter_plots_gtm.r"
+source(urlfiletext)
+
+urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/scatter_plots_tr_gtm.R"
+source(urlfiletext)
+
+urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/parcoord_gtm.r"
+source(urlfiletext)
+
+urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/boxplot1_GTM.r"
+source(urlfiletext)
+
+urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/plot_convergence_gtm.r"
+source(urlfiletext)#
+
 urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/error_measures.R"
 source(urlfiletext)
 
@@ -59,18 +108,18 @@ source(urlfiletext)
 #parameters from excel file - crucial for reading in the data with the respective temperature scenario
 
 urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/parameters.xlsx"
-parameters <- read.xlsx(urlfiletext, startRow = 3, sheet = 1)
+parvar <- read.xlsx(urlfiletext, startRow = 3, sheet = 1)
 
 
 ##########
 #reading in Fulda data from file
 ##########
 
-scenario_with_1_or_without_0_MO <-  parameters$scenario_with_1_or_without_0_MO[run]  
-scenario_with_1_or_without_0_fauna <- parameters$scenario_with_1_or_without_0_fauna[run]  
+scenario_with_1_or_without_0_MO <-  parvar$scenario_with_1_or_without_0_MO[run]  
+scenario_with_1_or_without_0_fauna <- parvar$scenario_with_1_or_without_0_fauna[run]  
 
-factor_CC_MO <-  parameters$factor_CC_MO[run]
-factor_CC_fauna <-  parameters$factor_CC_fauna[run]
+factor_CC_MO <-  parvar$factor_CC_MO[run]
+factor_CC_fauna <-  parvar$factor_CC_fauna[run]
 
 #this depends on the two scenario variables scenario_with_1_or_without_0_MO and scenario_with_1_or_without_0_fauna
 fulda_variables_read_in <- fulda_variables(run, factor_CC_MO, factor_CC_fauna)
@@ -87,8 +136,7 @@ chem_ordered_per_date_1978_1981$group_letter <- factor(chem_ordered_per_date_197
 
 #read parameters variables  from file
 parameters_read_in <- read_parameters(run)
-names(parameters_read_in) <- c("delta_t", "max_t", "aquifer_depth", "import_MO_het", "scenario_with_1_or_without_0_fauna", "scenario_with_1_or_without_0_MO", "mortalityRate", "import_fauna", "yield_ac", "yield_MO", "K_MO_at_temp", "rMO_BOC_uptake_per_day_at_lab_temperature", "rFauna_MO_uptake_per_day_at_TEMP", "k1", "excretionRate",  "RECHARGE_COD_mol_per_m3_per_day_df", "lab_temp", "K_ac", "growth_model_MO_type", "growth_model_fauna_type", "mortalityFraction_per_degree", "microbe_loss_factor_when_no_fauna") 
-#based on the data read in above and the parameters read in here, some further variables are derived within this function: e.g. "RECHARGE_COD_mol_per_m3_per_day_df"
+names(parameters_read_in) <- c("delta_t", "max_t", "aquifer_depth", "import_MO_het", "scenario_with_1_or_without_0_fauna", "scenario_with_1_or_without_0_MO", "mortalityRate", "import_fauna", "yield_ac", "yield_MO", "K_MO_at_temp", "rMO_BOC_uptake_per_day_at_lab_temperature", "rFauna_MO_uptake_per_day_at_TEMP", "k1", "excretionRate", "TOC_COD_mol_m2_yr_precipitation", "RECHARGE_COD_mol_per_m3_per_day_df", "lab_temp", "K_ac", "growth_model_MO_type", "growth_model_fauna_type", "mortalityFraction_per_degree", "microbe_loss_factor_when_no_fauna") 
 
 list2env(parameters_read_in, globalenv())
 
@@ -102,7 +150,7 @@ if(is.na(max_t)){
 #creating temperature scenarios
 ##########
 
-temperature_scenario <- parameters$temperature_scenario[run]
+temperature_scenario <- parvar$temperature_scenario[run]
 
 Fulda_daily_temp_joh_long$dateRi <- as.Date(Fulda_daily_temp_joh_long$dateRi)
 #not used at this instance:
@@ -159,8 +207,9 @@ fauna_mean_per_group_and_date <- fauna_deep_PerSamplPerTaxonWide_bm_sum %>%
   dplyr::mutate(x = bm_mol_COD_perL)
 
 ##########
-#container for results of the error measures derivation
+#container for results of the model fit
 ##########
+
 
 error_measures_data_table <- data.frame(run = NA, group = NA, variable = NA, R2 = NA, MAE = NA, RMSE = NA, MB = NA, NSE = NA, N = NA)
 
@@ -273,9 +322,9 @@ results4$BOC[1] <- BOC_gr4_t0
 results4$MO_het[1] <- MO_het_gr4_t0
 results4$fauna[1] <- fauna_gr4_t0
 
+
 results <- rbind(results1, results2, results3, results4)
 
-#results$group_letter <- ifelse(results$group ==  2, "P", ifelse(results$group == 3, "R" , ifelse (results$group == 4, "A", ifelse (results$group == 1, "M", NA))))
 
 results$group_letter <- factor(results$group_letter , levels = c("R", "M", "P", "A"))
 
@@ -283,91 +332,303 @@ uniquedatevector <- unique(results$dateRi)
 uniquegroupvector <- unique(results$group)
 uniquegrouplettervector <- unique(results$group_letter)
 
+#join BOC measured / observed to the results data frame for the error measures to be calculated between observed and modelled BOC
+results_joined <- dplyr::left_join(results, chem_ordered_per_date_1978_1981_mean_BOC_per_group_and_date, by =  c( "dateRi" = "Date" , "group" = "kmeans4gr"  ))
 
-#the following for loop is largely consistent with v. 1 . In v. 2 the for loop here can be replaced by a call to the function gtm, see below the loop 
+#sensitivity analysis leaning heavily on https://github.com/SAFEtoolbox/SAFE-R/blob/main/demo/workflow_rsa_hymod.R
+
+# Define inputs:
+DistrFun  <- "unif" # Parameter distribution
+
+DistrPar  <- list( 
+  c(0.001, .8), #yield_ac 
+  c(0.00000001, .0001), #K_ac 
+  c(0.00000001, .1), #factor_CC_MO
+  c(1, 20), #rMO_COD_uptake_per_day_at_lab_temperature
+  c(500,2000),#average_precipitation_mm_yr
+  c(0.5,1),#recharge_fraction_of_precipitation # was 1 in th efirst 6 runs
+  c(0.1, 1),#TOC_mol_m2_yr_precipitation
+  c(1,20),#factor_how_many_times_Detritus_compared_to_TOC
+  c(.000001, 1),#k1 
+  c(1,50),#aquifer_depth #10
+  c(.00000001, 1),#K_MO_at_temp
+  c(.001,.1),#yield_MO
+  c(0.001, 1.1),#rFauna_MO_uptake_per_day_at_TEMP
+  c(.0001, .1),#excretionRate 
+  c(0.000000001, 0.1),#mortalityRate #15
+  c(.01,1),#factor_CC_fauna
+  c(.001,0.5)#mortalityFraction_per_degree
+) #Parameter ranges (ideally from literature, but mostly not available)
+
+
+# vector of abbreviated variable names
+x_labels <- c(
+  "yield_ac",
+  "K_ac", 
+  "fact_CC_MO", 
+  "rMO_C_upt",
+  "av_prec_yr",
+  "rech_frct_prc",
+  "TOC_prec",	
+  "fct_Dt_TOC",
+  "k1",
+  "aquifer_depth",
+  "K_MO_temp",	
+  "yield_MO",
+  "rFau_MO_up",
+  "excretionRte",
+  "mortRate",
+  "fact_CC_fau",
+  "mrtFrct_p_dg"
+)
+
+#loop over the groups for executing the sensitivity analysis. For each group, this might take hours.
 for (g in 1:length(unique(results$group))){
   CC_group_MO_g <- CC_table_MO$CC[CC_table_MO$group == uniquegroupvector[g]]
   CC_group_fauna_g <- CC_table_fauna$CC[CC_table_fauna$group == uniquegroupvector[g]]
   group_letter_g <- unique(results$group_letter[results$group == uniquegroupvector[g]])
   
-  Fulda_daily_temp_joh_long_g <- Fulda_daily_temp_joh_long %>%
+  results_g <- results_joined %>%
     dplyr::filter(group_letter == group_letter_g)
   
-  for (i in 2:(length(uniquedatevector))) {
-    
-    #groundwater temp.
-    GWTEMP_ti <- Fulda_daily_temp_joh_long_g$gw_temp [Fulda_daily_temp_joh_long_g$dateRi == results$dateRi[i]]
-    
-    RECHARGE_COD_mol_per_m3_per_day_df_ti <- RECHARGE_COD_mol_per_m3_per_day_df$RECHARGE_COD_mol_per_m3_per_day [RECHARGE_COD_mol_per_m3_per_day_df$dateRi == uniquedatevector[i]]
-    
-    RECHARGE_COD_mol_per_L_per_day_df_ti <- RECHARGE_COD_mol_per_m3_per_day_df_ti /1000
-    
-    #take the respective field of the  Date == Date[i] aund group == group[g] 
-    DETRITUS_ti_minus_1 <- results$DETRITUS[results$dateRi == uniquedatevector[i-1] & results$group == uniquegroupvector[g]]     
-    BOC_ti_minus_1 <- results$BOC[results$dateRi == uniquedatevector[i-1] & results$group == uniquegroupvector[g]]
-    
-    MO_het_ti_minus_1 <- results$MO_het[results$dateRi == uniquedatevector[i-1] & results$group == uniquegroupvector[g]] 
-    
-    Fauna_ti_minus_1 <- results$fauna[results$dateRi == uniquedatevector[i-1] & results$group == uniquegroupvector[g]] 
-    
-    BOC_import_from_detritus_ti <- dBOC_from_detritus_dt(k1, DETRITUS_ti_minus_1) #mol COD / L
-    
-    if (scenario_with_1_or_without_0_fauna == 1) {
-      
-      Excretion <- dExcretion_dt(excretionRate, Fauna_ti_minus_1 )
-      
-      Mortality <- dMortality_dt(mortalityRate, mortalityFraction_per_degree, Fauna_ti_minus_1, GWTEMP_ti  ) 
-      
-      f_S_fauna <- dMO_fauna_degradation_factor_dt(MO_het_ti_minus_1,   rFauna_MO_uptake_per_day_at_TEMP , K_MO_at_temp, Fauna_ti_minus_1, delta_t, growth_model_fauna_type, CC_group_fauna_g)
-      
-      Fauna_ti_list <- dMO_fauna_uptake_dt(MO_het_ti_minus_1,   rFauna_MO_uptake_per_day_at_TEMP , K_MO_at_temp, Fauna_ti_minus_1, delta_t, growth_model_fauna_type, CC_group_fauna_g, yield_MO, Excretion , Mortality)
-      
-      Fauna_growth <- Fauna_ti_list[[1]]
-      Fauna_ti <- Fauna_ti_list[[2]]
-      
-    }else{
-      f_S_fauna <- 0
+  myfun <- "gtm_MulObj" # calls gtm_sim which is the actual time-stepped groundwater trophic model
+  
+  ## Step 3 (sample inputs space)
+  SampStrategy <- "lhs" # Latin Hypercube
+  N <- 3400 # Number of samples; 3400 as 20*17 parameters here; 3000 in https://github.com/SAFEtoolbox/SAFE-R/blob/main/demo/workflow_rsa_hymod.R
+  M <- length(DistrPar) # Number of inputs
+  X <- AAT_sampling(SampStrategy, M, DistrFun, DistrPar, N)
+  colnames(X) <- x_labels
+  
+  ## Step 4 (run the model) 
+  Y <- model_execution_gtm(myfun, X, dat = results_g)  # size (N,2).  X are the parameters
+  colnames(Y) <- c("rmse", "bias")
+  # if code does not work, try increasing N first   
+  
+  ## Step 5a (Regional Sensitivity Analysis with threshold)
+  
+  # (**) Note: if you want to use input/output samples generated in
+  # another programme, them here and save them in two matrix 
+  # input : X = (N x M)
+  # output: Y = (N x P)
+  # [N=number of samples; M=number of inputs; P=number of outputs]
+  
+  # Visualize input/output samples (this may help finding a reasonable value
+  # for the output threshold):
+  
+  scatter_plots(X,Y[,1]) + ylab("rmse")
+  setwd(gw_FuldaEcosystemServices_plots_path)
+  ggsave(paste0("scatter_plots_RMSE_group_",g ,".png"))
+  # 
+  
+  # use dev.new() if you want to open the plot in a new window
+  #dev.new() #does not always work on visual studio code; #https://stackoverflow.com/questions/52284345/how-to-show-r-graph-from-visual-studio-code. Workaround is to do windows() before a call to a plot
+  
+  scatter_plots(X,Y[,2]) + ylab("bias")
+  setwd(gw_FuldaEcosystemServices_plots_path)
+  ggsave(paste0("scatter_plots_bias_group_",g ,".png"))
+  
+  
+  # Set output threshold:
+  rmse_thres <- .000044    #  threshold for the first obj. fun.
+  bias_thres <- 0.00009  # behavioural threshold for the second obj. fun.
+  
+  #group 1
+  if (g == 1) {
+    rmse_thres <- .0005  #  threshold for the first obj. fun.
+    bias_thres <- 0.005  # behavioural threshold for the second obj. fun.
+  }
+  
+  #group 2
+  if (g == 2) {
+    rmse_thres <- .0002
+    bias_thres <- 0.0003
+  }
+  
+  #group 3
+  if (g == 3) {
+    rmse_thres <- .0004
+    bias_thres <- 0.0004 
+  }
+  
+  #group 4
+  if (g == 4) {
+    rmse_thres <- .001
+    bias_thres <- 0.002
+  }
+  
+  # RSA (find behavioural parameterizations):
+  threshold <- c(rmse_thres, bias_thres)
+  
+  rsatr <- RSA_indices_thres(X, Y, threshold) 
+  mvd <- rsatr$stat
+  idxb <- rsatr$idxb # True False - for colouring in one of the next plots
+  
+  # Highlight the behavioural parameterizations in the scatter plots:
+  
+  dev.new() # does not work in visual studio code
+  scatter_plots_tr_gtm(X, Y[,1], prnam = x_labels, idxb) + ylab("rmse")
+  setwd(gw_FuldaEcosystemServices_plots_path)
+  ggsave(paste0("scatter_plots_RMSE_mvd_idxb_group_",g ,".png"))
+  
+  dev.new()# does not work in visual studio code
+  scatter_plots_tr_gtm(X, Y[,2], prnam = x_labels, idxb) + ylab("bias")
+  setwd(gw_FuldaEcosystemServices_plots_path)
+  ggsave(paste0("scatter_plots_bias_mvd_idxb_group_",g ,".png"))
+  
+  # Plot parameter CDFs:
+  dev.new()# does not work in visual studio code
+  #RSA_plot_thres(X, idxb, prnam = x_labels, threshold = threshold) #threshold has two values, one for rmse, one for bias
+  #this plot might not work, reasons unknown; therefore outcommented
+  #setwd(gw_FuldaEcosystemServices_plots_path)
+  #ggsave(paste0("RSA_plot_thres_group_",g ,".png"))
+  
+  
+  
+  # Check the ranges of behavioural parameterizations by
+  # Parallel coordinate plot:
+  
+  mycol <- idxb
+  mycol[idxb == FALSE] <- gray(.7, alpha = .7)
+  mycol[idxb == TRUE] <-  gray(0, alpha = .7)
+  
+  dev.new()# does not work in visual studio code
+  parcoord_gtm(X, col = mycol, plotorder = idxb)
+  pdf(paste0("Parallel_coordinate_plot_group_",g ,"_.pdf"))
+  parcoord_gtm(X, col = mycol, plotorder = idxb)
+  dev.off()
+  
+  
+  
+  # Plot the sensitivity indices (maximum vertical distance between
+  # parameters CDFs):
+  
+  dev.new()
+  boxplot1_gtm(mu = mvd, prnam = x_labels) 
+  setwd(gw_FuldaEcosystemServices_plots_path)
+  ggsave(paste0("boxplot_mvd_group_",g ,".png"), width = 8, height = 4)
+  
+  # Compute sensitivity indices with confidence intervals using bootstrapping
+  
+  Nboot <- 1000
+  rsatr_b <- RSA_indices_thres(X, Y, threshold, Nboot = Nboot) 
+  
+  mvd <- rsatr_b$stat
+  idxb <- rsatr_b$idxb
+  
+  mvd_lb <- rsatr_b$stat_lb
+  mvd_ub <- rsatr_b$stat_ub
+  
+  # Plot results:
+  
+  dev.new()
+  boxplot1_gtm(mu = mvd, lb = mvd_lb, ub = mvd_ub, prnam = x_labels) 
+  setwd(gw_FuldaEcosystemServices_plots_path)
+  ggsave(paste0("boxplot_mvd_bootstrap_group_",g ,".png"), width = 8, height = 4)
+  
+  # Repeat computations using an increasing number of samples so to assess
+  # convergence:
+  NN <- seq(N / 5, N, by = N / 5 )
+  mvd <- RSA_convergence_thres(X, Y[,1], NN, threshold = rmse_thres) 
+  
+  mvd_st <- mvd$stat
+  
+  # Plot the sensitivity measures (maximum vertical distance between
+  # parameters CDFs) as a function of the number of samples:
+  
+  dev.new()#
+  plot_convergence_gtm(NN, mvd_st, xlab = "no of samples", ylab = "mvd", labels = x_labels)
+  pdf(paste0("plot_convergence_group_",g ,"_.pdf"))
+  plot_convergence_gtm(NN, mvd_st, xlab = "no of samples", ylab = "mvd", labels = x_labels)
+  dev.off()
+  
+  # Repeat convergence analysis using bootstrapping to derive
+  # confidence bounds:
+  
+  Nboot <- 1000
+  #if that does not work, and Nboot <- 600 does not work, try e.g. with Nboot <- 3 - that gives at least an impression
+  rsatr_b_conf <- RSA_convergence_thres(X, Y[,1], NN,  threshold = rmse_thres, Nboot = Nboot) 
+  mvd <- rsatr_b_conf$stat
+  idxb <- rsatr_b_conf$idxb
+  
+  mvd_lb <- rsatr_b_conf$stat_lb
+  mvd_ub <- rsatr_b_conf$stat_ub
+  
+  dev.new()
+  setwd(gw_FuldaEcosystemServices_plots_path)
+  pdf(paste0("plot_convergence_gtm_bootstrap_group_",g ,"_.pdf"))
+  plot_convergence_gtm(NN, mvd, mvd_lb, mvd_ub, xlab = "no of samples", ylab = "mvd", labels = x_labels)
+  dev.off()
+  
+  
+  
+  ## Step 5b (Regional Sensitivity Analysis with groups)
+  
+  # RSA (find behavioural parameterizations):
+  
+  rsa_gr <- RSA_indices_groups(X, Y[,1])
+  
+  mvd_median <- rsa_gr$mvd_median
+  mvd_mean <- rsa_gr$mvd_mean
+  mvd_max <- rsa_gr$mvd_max
+  spread_median <- rsa_gr$spread_median
+  spread_mean <- rsa_gr$spread_mean
+  spread_max <- rsa_gr$spread_max
+  idx <- rsa_gr$idx
+  Yk <- rsa_gr$Yk
+  
+  # Plot parameter CDFs:
+  #dev.new()
+  #RSA_plot_groups(X, idx, Yk, prnam = x_labels) + ylab("rmse")
+  #might not work, therefore outcommented
+  
+  # Compute sensitivity indices with confidence intervals using bootstrapping
+  Nboot <- 1000
+  ngroup <- 10
+  rsa_gr_b <- RSA_indices_groups(X, Y[,1], ngroup, Nboot)
+  
+  # Statistics across all bootstrap resamples
+  mvd_median <- rsa_gr_b$mvd_median
+  mvd_mean <- rsa_gr_b$mvd_mean
+  mvd_max <- rsa_gr_b$mvd_max
+  spread_median <- rsa_gr_b$spread_median
+  spread_mean <- rsa_gr_b$spread_mean
+  spread_max <- rsa_gr_b$spread_max
+  idx <- rsa_gr_b$idx
+  Yk <- rsa_gr_b$Yk
+  
+  # Compute mean and confidence intervals of the sensitivity indices across the
+  # bootstrap resamples:
+  alfa <- 0.05 # Significance level for the confidence intervals estimated by bootstrapping 
+  
+  mvd_median_m <- colMeans(mvd_median) # median
+  mvd_median_lb <-  colQuantiles(mvd_median,probs=alfa/2) # Lower bound
+  mvd_median_ub <- colQuantiles(mvd_median,probs=1-alfa/2) # Upper bound
+  
+  mvd_mean_m <- colMeans(mvd_mean) # mean
+  mvd_mean_lb <-  colQuantiles(mvd_mean,probs=alfa/2) # Lower bound
+  mvd_mean_ub <- colQuantiles(mvd_mean,probs=1-alfa/2) # Upper bound
+  
+  mvd_max_m <- colMeans(mvd_max) # max
+  mvd_max_lb <-  colQuantiles(mvd_max,probs=alfa/2) # Lower bound
+  mvd_max_ub <- colQuantiles(mvd_max,probs = 1-alfa/2) # Upper bound
+  
+  # Plot results:
+  
+  dev.new()
+  boxplot1_gtm(mu = mvd_median_m, lb = mvd_median_lb, ub = mvd_median_ub, prnam = x_labels) + ylab("mvd median") 
+  setwd(gw_FuldaEcosystemServices_plots_path)
+  ggsave(paste0("boxplot_mvd_bootstrap_resample_group_",g ,".png"), width = 8, height = 4)
+  ##### end regional sensitivity analysis
+}#end loop through groups
 
-      Fauna_ti <- 0
-      Fauna_growth <- 0
-      Excretion <- 0
-      Mortality <- 0
-    }
-    
-    
-    rMO_BOC_uptake_per_day_at_TEMP <- d_BOC_MO_het_uptake_dt_per_day_per_temperature( rMO_BOC_uptake_per_day_at_lab_temperature,  GWTEMP_ti, lab_temp) 
-    
-    K_ac_at_TEMP <- d_K_ac_per_temperature(K_ac, lab_temp, GWTEMP_ti) 
-    
-    #how much COD = BOC degraded 
-    f_S_MO <- dBOC_degradation_factor_dt(BOC_ti_minus_1,   rMO_BOC_uptake_per_day_at_TEMP, K_ac_at_TEMP, MO_het_ti_minus_1, delta_t, growth_model_MO_type, CC_group_MO_g)
-    
-    MO_het_ti_list  <- dBOC_MO_degradation_dt(BOC_ti_minus_1,   rMO_BOC_uptake_per_day_at_TEMP,  K_ac_at_TEMP, MO_het_ti_minus_1, yield_ac, f_S_fauna, delta_t, growth_model_MO_type, CC_group_MO_g) 
-    MO_growth <- MO_het_ti_list[[1]]
-    MO_het_ti <- MO_het_ti_list[[2]]
-    
-    BOC_ti_interim <- dBOC_stock_dt(BOC_ti_minus_1,  f_S_MO, BOC_import_from_detritus_ti, Excretion) 
-    BOC_ti            <- max(0, BOC_ti_interim)      # to avoid errors when COD = BOC becomes slightly negative.. From Soetaert (2008)
-    
-    #since this happens in this time step, the new Detritus is not used for further reactions in this time step - the detritus from the time step before is used
-    DETRITUS_ti <- dDETRITUS_dt( k1, DETRITUS_ti_minus_1, RECHARGE_COD_mol_per_L_per_day_df_ti, Mortality ) 
-    
-    results$MO_het[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- MO_het_ti
-    
-    results$fauna[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- Fauna_ti
-    
-    results$BOC[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- BOC_ti
-    
-    results$growthrate[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- rMO_BOC_uptake_per_day_at_TEMP
-    
-    results$DETRITUS[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- DETRITUS_ti 
-    
-    results$import_from_detritus[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- BOC_import_from_detritus_ti 
-    
-  } #end groups
-}#end time
 
-#this for loop can be replaced by a call to the function gtm() implemented in v. 2.0.0 of the github code
+
+
+
+
+
+# for plotting the results, need to derive the results in a separate data frame
 results <- gtm()
 
 #ggplot requires the data to be in data frame
@@ -384,13 +645,49 @@ results_df_long <- results_df %>%
 write.table(results_df, paste0("results_df_long_run_",run,".txt"), row.names = FALSE)
 
 
+#read in data - outcomment this block if you are using fresh data ! only relevant for previously saved data
+#in order to produce plots which compare the runs, read the run results from files saved previously
+setwd(gw_FuldaEcosystemServices_results_txt_path)
+
+results_df_1 <- read.table( "results_df_run_1.txt", header = TRUE)
+results_df_2 <- read.table( "results_df_run_2.txt", header = TRUE)
+results_df_3 <- read.table( "results_df_run_3.txt", header = TRUE)
+results_df_4 <- read.table( "results_df_run_4.txt", header = TRUE)
+results_df_5 <- read.table( "results_df_run_5.txt", header = TRUE)
+results_df_6 <- read.table( "results_df_run_6.txt", header = TRUE)
+
+results_df_1$run <- 1
+results_df_2$run <- 2
+results_df_3$run <- 3
+results_df_4$run <- 4
+results_df_5$run <- 5
+results_df_6$run <- 6
+
+#if using one of the saved ones for producing the  figures below, prepare the respective data, by replacing xx with the number of the run
+# results_df <- results_df_xx
+# results_df$dateRi <- as.Date(results_df$dateRi)
+# results_df$group_letter <- factor(results_df$group_letter , levels = c("R", "M", "P", "A"))
+# run <- xx
+
+#e.g. for plotting from previously saved file
+run <- 1
+results_df <- results_df_1
+results_df$dateRi <- as.Date(results_df$dateRi)
+results_df$group_letter <- factor(results_df$group_letter , levels = c("R", "M", "P", "A"))
+#END block read in data - outcomment for fresh data !
+
+
 unified_axes <- 1 # 1 = make the same axis for all four subplots , representing the four groups . 0 = axes reflect the groups' minima and maxima
+
+
 
 
 #combine measured data with modelled data to calculate model accuracy - for that, join model results to measured values
 DETR_1978_1981_mean_per_group_and_date_joined <- left_join(DETR_1978_1981_mean_per_group_and_date, results_df, by =  c("Date" = "dateRi", "kmeans4gr" = "group"))
 
 error_measures_data_DETRITUS_groups <- error_measures_data_table
+
+my.formula <- y ~ x
 
 for (i in 1: length(unique(DETR_1978_1981_mean_per_group_and_date_joined$kmeans4gr))) {
   DETR_1978_1981_mean_per_group_and_date_joined_group <- DETR_1978_1981_mean_per_group_and_date_joined %>%
@@ -432,11 +729,7 @@ geomtexttable_DETRITUS$NSE <- paste("NSE =", geomtexttable_DETRITUS$NSE)
 geomtexttable_DETRITUS$MB <- paste("MB =", geomtexttable_DETRITUS$MB)
 geomtexttable_DETRITUS$N <- paste("N =", geomtexttable_DETRITUS$N)
 
-# ylablist <- list( bquote( paste( "Detritus") ) ,
-#                bquote( paste( "[mol COD  ", L^{-1}, " ]" ) ) ,
-#                bquote(paste("measured [o] and")),
-#                bquote("modelled [.]")
-#                )
+
 
 Fulda_Detritus_partOrganics_plot <- chem_ordered_per_date_1978_1981 %>%
   dplyr::filter(!is.na(OS_mol_COD_L))%>%
@@ -447,18 +740,10 @@ Fulda_Detritus_partOrganics_plot <- chem_ordered_per_date_1978_1981 %>%
   )+
   scale_x_date(limits = c(t_0, t_max) )+
   #labs(x = "Date", y = "Detritus\n [mol COD/ L]\n measured [o] and\nmodelled [.]")+ 
-  #cannot combine expression(paste and \n labs(x = "Date", y = expression(paste("Detritus\n [mol COD  ", L^{-1}, " ]\n measured [o] and\n modelled [.]")))+
-  #error labs(x = "Date", y = parse("Detritus\n [mol~COD~L^{-1}~]*\nmeasured~[*o*]~and\nmodelled~[*.*]"))+
-#\n in "" does not do anything and \n without "" produces error  labs(x = "Date", y = expression(Detritus*"\n"~"["*mol~COD~L^{"-1"}~"]"~\nmeasured~"["*o*"]"~and~modelled~"["*.*"]"))+
-  #works but each consecutive line becomes smaller because they need to fit into the same space  labs(x = "Date", y = expression(atop("Detritus",atop("[mol COD "*L^{-1}*"]",atop("measured [o] and"," modelled [.]")))))+
-  #only prints the first line  labs(x = "Date", y = do.call(expression, ylablist))+ #https://stackoverflow.com/questions/18237134/line-break-in-expression/18237295#18237295
-  #labs(x = "Date", y = "Detritus\n [mol COD  L<sup>-1</sup>]\n measured [o] and\n modelled [.]")+ # https://forum.posit.co/t/exponent-numbers-in-ggplot-labels/171969/2 library ggtext
-  #labs(x = "Date", y = "Detritus [mol COD  L<sup>-1</sup>] measured [o] and modelled [.]")+ # https://forum.posit.co/t/exponent-numbers-in-ggplot-labels/171969/2 library ggtext
-  #cannot deal with line breaks \n
   labs(x = "Date", y = "Detritus<br> [mol COD L<sup>-1</sup>]<br> measured [o] and <br>modelled [.]")+ # https://forum.posit.co/t/exponent-numbers-in-ggplot-labels/171969/2 library ggtext
   scale_fill_okabe_ito()+ 
   scale_color_okabe_ito()+
-
+  
   geom_text(data = geomtexttable_DETRITUS,
             aes(x = x, y = y, label = R2), hjust = 0, size = 2)+
   geom_text(data = geomtexttable_DETRITUS,
@@ -493,9 +778,6 @@ if (unified_axes == 1) {
   )
 }
 
-
-my.formula <- y ~ x
-
 (Fulda_Detritus_partOrganics_plot_trends <- Fulda_Detritus_partOrganics_plot +
     geom_smooth(method = "lm",
                 data = results_df, aes(x = dateRi, y = DETRITUS),
@@ -513,8 +795,8 @@ max_BOC <- max(chem_ordered_per_date_1978_1981$BOC_mol_COD_L, results$BOC, na.rm
 #there is one model per group, thus, this will be compared with the mean per group
 chem_ordered_per_date_1978_1981_BOC_joined <- left_join(chem_ordered_per_date_1978_1981_mean_BOC_per_group_and_date, results_df, by =  c("Date" = "dateRi", "kmeans4gr" = "group"))
 
+i <- 1 # M
 error_measures_data_BOC_groups <- error_measures_data_table
-
 for (i in 1: length(unique(chem_ordered_per_date_1978_1981_BOC_joined$kmeans4gr))) {
   chem_ordered_per_date_1978_1981_BOC_joined_group <- chem_ordered_per_date_1978_1981_BOC_joined %>%
     dplyr::filter(kmeans4gr == i)
@@ -527,10 +809,9 @@ for (i in 1: length(unique(chem_ordered_per_date_1978_1981_BOC_joined$kmeans4gr)
 error_measures_data_BOC_groups <- error_measures_data_BOC_groups %>%
   dplyr::filter(!is.na(N))
 
+my.formula <- y ~ x
 
-#in the sensitivity analysis version of this file, this join is done before the sensitivity analysis
-chem_ordered_per_date_1978_1981_mean_BOC_per_group_and_date_joined <- dplyr::left_join(results, chem_ordered_per_date_1978_1981_mean_BOC_per_group_and_date, by =  c( "dateRi" = "Date" , "group" = "kmeans4gr"  ))
-
+max_BOC <- max(chem_ordered_per_date_1978_1981$BOC_mol_COD_L, results_df$BOC, na.rm =TRUE)
 
 #make a table with 4x the same coordinates x, y, and for the label: the column BOC
 geomtexttable_BOC <- as.data.frame(cbind("group" = error_measures_data_BOC_groups$group, "x" = rep("1980-04-01",4), "y" = rep(max_BOC*.95, 4),
@@ -562,6 +843,7 @@ geomtexttable_BOC$group_letter <- factor(geomtexttable_BOC$group_letter, levels 
 Fulda_BOC_plot <- chem_ordered_per_date_1978_1981 %>%
   dplyr::filter(!is.na(BOC_mol_COD_L)) %>%
   ggplot() +
+  
   geom_point(data = results_df, aes(x = dateRi, y = BOC, colour = as.factor(group_letter)),   pch = 16, size = 0.5, show.legend = FALSE)+
   geom_point(aes(x = Date, y = BOC_mol_COD_L, fill = as.factor(group_letter)),  pch = 21  , colour = "black", show.legend = FALSE)  +
   scale_x_date(limits = c(t_0, t_max) )+
@@ -606,7 +888,6 @@ if (unified_axes == 1) {
   )
 }
 
-my.formula <- y ~ x
 
 (Fulda_BOC_plot_trends <- Fulda_BOC_plot +
     geom_smooth(method = "lm",
@@ -615,10 +896,11 @@ my.formula <- y ~ x
 ) 
 
 
-max_MO_het_for_plot <- max(chem_ordered_per_date_1978_1981$total_Prok_mol_COD_L, results_df$MO_het, na.rm =TRUE)
 
-#combine measured data with modelled data to calculate model accuracy - for that, join model results to the average per group and date of measured values for microbial numbers
+
+#combine measured data with modelled data to calculate model accuracy - for that, join model results to measured values for microbial numbers
 MO_het_1978_1981_mean_per_group_and_date_joined <- left_join(MO_het_1978_1981_mean_per_group_and_date, results_df, by =  c("Date" = "dateRi", "kmeans4gr" = "group"))
+
 
 error_measures_data_MO_het_groups <- error_measures_data_table
 for (i in 1: length(unique(MO_het_1978_1981_mean_per_group_and_date_joined$kmeans4gr))) {
@@ -633,9 +915,7 @@ for (i in 1: length(unique(MO_het_1978_1981_mean_per_group_and_date_joined$kmean
 error_measures_data_MO_het_groups <- error_measures_data_MO_het_groups %>%
   dplyr::filter(!is.na(N))
 
-geomtexttable_MO <- as.data.frame(cbind("group" = error_measures_data_MO_het_groups$group, 
-                                        "x" = rep("1980-04-01",4), 
-                                        "y" = rep(max_MO_het_for_plot*.95, 4),
+geomtexttable_MO <- as.data.frame(cbind("group" = error_measures_data_MO_het_groups$group, "x" = rep("1980-04-01",4), "y" = rep(max(chem_ordered_per_date_1978_1981$MO_het_mol_COD_L, results_df$MO_het)*.95, 4),
                                         "R2" = error_measures_data_MO_het_groups$R2 ,
                                         "MAE" = error_measures_data_MO_het_groups$MAE ,
                                         "RMSE" = error_measures_data_MO_het_groups$RMSE ,
@@ -676,8 +956,6 @@ Fulda_MO_plot <- chem_ordered_per_date_1978_1981 %>%
   )+
   
   scale_x_date(limits = c(t_0, t_max) )+
-  
-  scale_y_continuous (limits = c(0, max_MO_het_for_plot) )+
   
   #labs(x = "Date", y = "Microbial dry mass\n[mol COD / L]\nmeasured [o] and\nmodelled [.]")+ 
   labs(x = "Date", y = "Microbial dry mass<br> [mol COD L<sup>-1</sup>]<br> measured [o] and <br>modelled [.]")+ 
@@ -727,6 +1005,13 @@ if (unified_axes == 1) {
                 ),
                 se=TRUE,  formula = my.formula, lwd = 0.3) 
 ) 
+
+
+
+
+#maxmodelfauna <-max(results_df$fauna)
+
+
 
 
 
@@ -788,7 +1073,7 @@ Fulda_fauna_plot <-fauna_deep_PerSamplPerTaxonWide_bm_sum_for_plot %>%
   
   scale_fill_okabe_ito()+ 
   scale_color_okabe_ito()+
-
+  
   geom_text(data = geomtexttable_fauna,
             aes(x = x, y = y, label = R2), hjust = 0, size = 2)+
   geom_text(data = geomtexttable_fauna,
@@ -861,32 +1146,9 @@ if (unified_axes == 1) {
 }
 
 
-#this block is for read in data - outcomment this block for fresh data !
-#in order to produce plots which compare the runs, read the four run results from files saved previously
-setwd(gw_FuldaEcosystemServices_results_txt_path)
 
-results_df_1 <- read.table( "results_df_run_1.txt", header = TRUE)
-results_df_2 <- read.table( "results_df_run_2.txt", header = TRUE)
-results_df_3 <- read.table( "results_df_run_3.txt", header = TRUE)
-results_df_4 <- read.table( "results_df_run_4.txt", header = TRUE)
-results_df_5 <- read.table( "results_df_run_5.txt", header = TRUE)
-results_df_6 <- read.table( "results_df_run_6.txt", header = TRUE)
 
-#if using one of the saved ones for producing the above figures, prepare the respective data, by replacing xx with the number of the run
-# results_df <- results_df_xx
-results_df$dateRi <- as.Date(results_df$dateRi)
-results_df$group_letter <- factor(results_df$group_letter , levels = c("R", "M", "P", "A"))
-run <- xx
-
-results_df_1$run <- 1
-results_df_2$run <- 2
-results_df_3$run <- 3
-results_df_4$run <- 4
-results_df_5$run <- 5
-results_df_6$run <- 6
-#END block read in data - outcomment for fresh data !
-
-#the combined plots in the following require the first 6 (or 8) scenarios to have been read in with the outcommented block above
+#the combined plots in the following require the first 6 (or 8)  scenarios to have been read in with the outcommented block above
 results_df__for_overview_all <- rbind(results_df_1, results_df_2, results_df_3, results_df_4, results_df_5, results_df_6)
 
 
@@ -948,13 +1210,11 @@ for(i in c(1:length(unique(results_df__for_overview_all_long$run)))){
 }
 
 names(lm_i_list) <- sub("diff_over_observation_period.1342", "fitted_diff_over_observation_period", names(lm_i_list) )
-names(lm_i_list) <- sub("fitted_fitted_diff_over_observation_period", "fitted_diff_over_observation_period", names(lm_i_list) )
 names(lm_i_list) <- sub("fitted_conc_t_0.1", "fitted_conc_t_0", names(lm_i_list) )
 names(lm_i_list) <- sub("fitted_conc_t_max.1342", "fitted_conc_t_max", names(lm_i_list) )
 
 lm_i_list_ <- lm_i_list %>%
   dplyr::mutate(group = ifelse(group_letter==3,"R",ifelse(group_letter==2,"P",ifelse(group_letter==4,"A",ifelse(group_letter==1,"M","z"))))) %>%
-  #dplyr::select(c("run", "group", "variable", "coefficient_intercept", "coefficient_slope",  "F_value", "p_val", "fitted_diff_over_observation_period", "conc_t_0", "conc_t_max", "fitted_conc_t_0", "fitted_conc_t_max", "group_letter", "max_"))
   dplyr::select(c("run", "group_letter", "variable", "coefficient_intercept", "coefficient_slope",  "F_value", "p_val", "fitted_diff_over_observation_period", "conc_t_0", "conc_t_max", "fitted_conc_t_0", "fitted_conc_t_max", "group_letter", "max_"))
 
 setwd(gw_FuldaEcosystemServices_results_txt_path)
@@ -1042,7 +1302,8 @@ if (unified_axes == 1) {
     
     guides(colour = guide_legend(override.aes = list(line = override.line, colour = override.col, linewidth = override.linewidth))) +
     
-    labs(x = "Date", y = "Microorganisms [mol COD / L]") +
+    #labs(x = "Date", y = "Microorganisms [mol COD / L]") +
+    labs(x = "Date", y = "Microbial dry mass [mol COD L<sup>-1</sup>]")+ 
     theme(panel.background = element_rect(fill = "white",  colour = "black",  linetype = "solid" ),
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
@@ -1050,7 +1311,7 @@ if (unified_axes == 1) {
           axis.text.x = element_text(angle = 45, vjust = 0.4),
           legend.key = element_blank(), 
           legend.background=element_blank(),
-        axis.title.y = element_textbox_simple(width = NULL,
+          axis.title.y = element_textbox_simple(width = NULL,
                                               orientation = 'left-rotated')# necessary for the ylab with library ggtext
     )+
     facet_wrap(.~group_letter, scales="free_y", ncol = 4)
@@ -1075,7 +1336,7 @@ ggsave("plot_trends_MO_1_2_3_4_5_6__.pdf", width = 8, height = 2.5)
     guides(colour = guide_legend(override.aes = list(line = override.line, colour = override.col, linewidth = override.linewidth))) +
     
     #labs(x = "Date", y = "Fauna [mol COD / L]") +
-    labs(x = "Date", y = "Fauna dry mass [mol COD L<sup>-1</sup>]")+ 
+    labs(x = "Date", y = "Fauna dry mass [mol COD L<sup>-1</sup>])+ 
     theme(panel.background = element_rect(fill = "white",  colour = "black",  linetype = "solid" ),
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
@@ -1083,7 +1344,7 @@ ggsave("plot_trends_MO_1_2_3_4_5_6__.pdf", width = 8, height = 2.5)
           axis.text.x = element_text(angle = 45, vjust = 0.4),
           legend.key = element_blank(), 
           legend.background=element_blank(),
-        axis.title.y = element_textbox_simple(width = NULL,
+          axis.title.y = element_textbox_simple(width = NULL,
                                               orientation = 'left-rotated')# necessary for the ylab with library ggtext
     )+
     facet_wrap(.~group_letter, scales="free_y", ncol = 4)
@@ -1266,7 +1527,7 @@ if (unified_axes == 1) {
     
     guides(colour = guide_legend(override.aes = list(line = override.line, colour = override.col, linewidth = override.linewidth))) +
     
-    #labs(x = "Date", y = "Microorganisms [mol COD / L]") +
+    labs(x = "Date", y = "Microorganisms [mol COD / L]") +
     labs(x = "Date", y = "Microbial dry mass [mol COD L<sup>-1</sup>]")+
     theme(panel.background = element_rect(fill = "white",  colour = "black",  linetype = "solid" ),
           panel.grid.major = element_blank(),

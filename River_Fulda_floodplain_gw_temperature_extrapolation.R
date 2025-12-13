@@ -10,43 +10,41 @@ library(patchwork) #for sticking together different plots
 
 rm(list = ls())
 
-#define your own local path where to save plots to
-gw_FuldaEcosystemServices_plots_path <-""
+#use your own local path where to save plots to, defined before this function
 
 urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/produkt_tu_termin_18850101_20231231_01526.txt"
 
 Fulda_daily_temp <- read.table(urlfiletext,sep = ";", header = TRUE)  
-  
+
 Fulda_daily_temp$dateRi  <- as.Date(as.character(substr(Fulda_daily_temp$MESS_DATUM, 1, 8)), format = c("%Y%m%d") )
-  
+
 Fulda_daily_temp_ <- Fulda_daily_temp %>%
-    dplyr::filter(TT_TER > -999)%>%
-    # three values per day are given, morning mid day evening;  take the average here because for groundwater temperature, the mean is more decisive than minima and maxima
-    dplyr::mutate(dateRi = substr(MESS_DATUM, 1, 8)) %>%
-    dplyr::group_by(dateRi)%>%
-    dplyr::summarise(TT_TER = mean(TT_TER, na.rm = TRUE))
-  
-  Fulda_daily_temp_$dateRi <- as.Date(Fulda_daily_temp_$dateRi, format = "%Y%m%d")
-  
+  dplyr::filter(TT_TER > -999)%>%
+  # three values per day are given, morning mid day evening;  take the average here because for groundwater temperature, the mean is more decisive than minima and maxima
+  dplyr::mutate(dateRi = substr(MESS_DATUM, 1, 8)) %>%
+  dplyr::group_by(dateRi)%>%
+  dplyr::summarise(TT_TER = mean(TT_TER, na.rm = TRUE))
+
+Fulda_daily_temp_$dateRi <- as.Date(Fulda_daily_temp_$dateRi, format = "%Y%m%d")
 
 
-  urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/kmeans_chem_4_seed7.txt"
-  
-  kmeans_chem4_exchgroups <-read.table(urlfiletext, sep = " ", header = TRUE)#
-  
-  
-  urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/chem.txt"
-  chem <- read.table(urlfiletext, sep = " ", header = TRUE)
-  
-  chem_ordered_per_date <- chem[order(chem$Date) , ]
-  chem_ordered_per_date_1978_1981 <- chem_ordered_per_date[DescTools::Year(chem_ordered_per_date$Date)>1977 & DescTools::Year(chem_ordered_per_date$Date)<1982,]
-  chem_ordered_per_date_1978_1981$Date <- as.Date(chem_ordered_per_date_1978_1981$Date)
-  
-  chem_ordered_per_date_1978_1981$kmeans4gr <- kmeans_chem4_exchgroups$V2[match(chem_ordered_per_date_1978_1981$P, kmeans_chem4_exchgroups$V1)]
-  
-  chem_ordered_per_date_1978_1981 <- chem_ordered_per_date_1978_1981 %>%
-    dplyr::filter(!is.na(kmeans4gr))
-  
+urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/kmeans_chem_4_seed7.txt"
+
+kmeans_chem4_exchgroups <-read.table(urlfiletext, sep = " ", header = TRUE)#
+
+
+urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/chem.txt"
+chem <- read.table(urlfiletext, sep = " ", header = TRUE)
+
+chem_ordered_per_date <- chem[order(chem$Date) , ]
+chem_ordered_per_date_1978_1981 <- chem_ordered_per_date[DescTools::Year(chem_ordered_per_date$Date)>1977 & DescTools::Year(chem_ordered_per_date$Date)<1982,]
+chem_ordered_per_date_1978_1981$Date <- as.Date(chem_ordered_per_date_1978_1981$Date)
+
+chem_ordered_per_date_1978_1981$kmeans4gr <- kmeans_chem4_exchgroups$V2[match(chem_ordered_per_date_1978_1981$P, kmeans_chem4_exchgroups$V1)]
+
+chem_ordered_per_date_1978_1981 <- chem_ordered_per_date_1978_1981 %>%
+  dplyr::filter(!is.na(kmeans4gr))
+
 chem_ordered_per_date_1978_1981$group <- chem_ordered_per_date_1978_1981$kmeans4gr
 
 chem_ordered_per_date_1978_1981$group_letter <- ifelse(chem_ordered_per_date_1978_1981$group ==  2, "P", ifelse(chem_ordered_per_date_1978_1981$group == 3, "R" , ifelse (chem_ordered_per_date_1978_1981$group == 4, "A", ifelse (chem_ordered_per_date_1978_1981$group == 1, "M", NA))))   #
@@ -56,10 +54,9 @@ chem_ordered_per_date_1978_1981$group_letter <- factor(chem_ordered_per_date_197
 
 
 ##########
-#creating temperature scenarios
+#preparing groundwater temperature based on air temperature, per group
 ##########
 
-#temperature_scenario <- parvar$temperature_scenario[run]
 
 Fulda_daily_temp_$dateRi <- as.Date(Fulda_daily_temp_$dateRi, format = c("%Y%m%d"))
 Fulda_daily_temp_joh <- Fulda_daily_temp_ %>%
@@ -69,7 +66,6 @@ Fulda_daily_temp_joh <- Fulda_daily_temp_ %>%
 #11.5.25 because of the mutates and group ?? I need to reformat date:
 Fulda_daily_temp_joh$dateRi <- as.Date(Fulda_daily_temp_joh$dateRi, format = c("%Y%m%d"))
 
-#Fulda_daily_temp_joh$TT_TER <- Fulda_daily_temp_joh$TT_TER + temperature_scenario
 Fulda_daily_temp_johave <- mean(Fulda_daily_temp_joh$TT_TER, na.rm =TRUE)
 Fulda_daily_temp_johmin <-  min(Fulda_daily_temp_joh$TT_TER, na.rm =TRUE)
 Fulda_daily_temp_johmax <- max(Fulda_daily_temp_joh$TT_TER, na.rm =TRUE)
@@ -134,24 +130,24 @@ Fulda_daily_temp_joh_long$size <- as.numeric( ifelse(Fulda_daily_temp_joh_long$g
     geom_line( data = Fulda_daily_temp_joh_long, aes(x = dateRi , y = value, group = group_letter, fill = "label2", col  = "red")
     )+
     geom_point(data = chem_ordered_per_date_1978_1981, aes(x = Date, y = Temp, group = group_letter, fill = "in situ", 
- col = factor(size)), col = "blue"
+                                                           col = factor(size)), col = "blue"
     )+
     scale_x_date(limits = c(as.Date("1978-01-01") , as.Date("1982-01-01")))+ 
     #https://stackoverflow.com/questions/47865121/create-ggplot2-legend-for-multiple-datasets
     scale_color_discrete(name = "daily" , type = c("black", "red"), label = c("air", "extrapolated groundwater")) +
-   scale_fill_manual(name = "Temperature °C, \nin situ", values = c("in situ" = "grey")) +
-labs(x = "Date", y = "Daily average temperature [°C]", title = "Temperature in situ and extrapolation")+
-  theme(panel.background = element_rect(fill = "white",  colour = "black", #size = 0.5, 
-                                         linetype = "solid" ),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        legend.key = element_blank(), 
-        legend.background=element_blank(),
-        
-        axis.text.x = element_text(angle = 45, vjust = 0.4))+
-  facet_grid( . ~ group_letter)
+    scale_fill_manual(name = "Temperature °C, \nin situ", values = c("in situ" = "grey")) +
+    labs(x = "Date", y = "Daily average temperature [°C]", title = "Temperature in situ and extrapolation")+
+    theme(panel.background = element_rect(fill = "white",  colour = "black", #size = 0.5, 
+                                          linetype = "solid" ),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          legend.key = element_blank(), 
+          legend.background=element_blank(),
+          
+          axis.text.x = element_text(angle = 45, vjust = 0.4))+
+    facet_grid( . ~ group_letter)
 )
-  
+
 setwd(gw_FuldaEcosystemServices_plots_path )
 ggsave ("Temperature_air_and_groundwater_estimated_and_measured_groups_with_Fulda_not_Kassel.png", width = 8, height = 3)
 

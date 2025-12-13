@@ -1,7 +1,7 @@
 #leaning hevaily on https://github.com/SAFEtoolbox/SAFE-R/blob/main/R/plot_convergence.R
 #' Plot convergence
 
-#' Draws the plot to analise the convergence
+#' Draws the plot to analyse the convergence
 
 #' @param n vector \code{P} of number of model evaluations
 #' @param est matrix \code{(P, M)} with the mean of the indices. 

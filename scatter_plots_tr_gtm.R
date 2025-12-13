@@ -59,7 +59,7 @@ scatter_plots_tr_gtm <- function(X, Y, prnam = NULL, idx = NULL){
       facet_grid(. ~ parnam, scales = "free") + 
       geom_point(data=dat, fill="blue", colour="blue") + ylab("Output") + xlab("Inputs") + 
       theme_bw()+
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) # sis
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) # changed from original; important when more than ca. 5 variables
     
     .pl <- .pl + geom_point(data=dat_tr, fill="red", colour="red")
 

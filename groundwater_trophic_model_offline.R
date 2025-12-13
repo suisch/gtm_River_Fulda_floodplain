@@ -25,52 +25,120 @@ rm(list = ls()) #remove any variables and data created before, to make sure that
 ##########
 run <- 1
 
-# define these paths for saving your result text files locally
-#gw_FuldaEcosystemServices_plots_path <-""
-#gw_FuldaEcosystemServices_results_txt_path <-""
-#e.g.
-gw_FuldaEcosystemServices_plots_path <-"D:"
-gw_FuldaEcosystemServices_results_txt_path <-"D:"
+#TODO define these paths for saving your result text files locally
+#TODO offline see below within block read-in depending on operating system
+# gw_FuldaEcosystemServices_plots_path <-""
+# gw_FuldaEcosystemServices_results_txt_path <-""
+# #e.g.
+# gw_FuldaEcosystemServices_plots_path <-"D:"
+# gw_FuldaEcosystemServices_results_txt_path <-"D:"
 
 ##########
 #preparing read-in of data
 ##########
 
-urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/River_Fulda_floodplain_data.R"
-source(urlfiletext)  ##fulda_variables
+get_os <- function(){
+  sysinf <- Sys.info()
+  if (!is.null(sysinf)){
+    os <- sysinf['sysname']
+    if (os == 'Darwin')
+      os <- "osx"
+  } else { ## mystery machine
+    os <- .Platform$OS.type
+    if (grepl("^darwin", R.version$os))
+      os <- "osx"
+    if (grepl("linux-gnu", R.version$os))
+      os <- "linux"
+  }
+  tolower(os)
+}
 
-urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/River_Fulda_floodplain_parameters.R"
-source(urlfiletext) # Fulda parameters
+whichosrightnow <- get_os()
+
+extHD_on_UFZ <- TRUE
+
+if(whichosrightnow == "windows") {
+  if(extHD_on_UFZ){
+    
+    gw_FuldaEcosystemServices_results_txt_path <-"G:\\freefilesyncHBU\\projects\\gw_ecosystem_services_Fulda_plain\\results\\txt"
+    gw_FuldaEcosystemServices_plots_path <-"G:\\freefilesyncHBU\\projects\\gw_ecosystem_services_Fulda_plain\\results\\plots"
+    
+    setwd("G:\\freefilesyncHBU\\projects\\git\\gw_ecosystem_services\\Fulda_plains\\R_git\\gtm_River_Fulda_floodplain\\gtm_River_Fulda_floodplain")
+    
+  }else{
+    
+    gw_FuldaEcosystemServices_results_txt_path <-"d:\\work\\projects\\gw_ecosystem_services_Fulda_plain\\results\\txt"
+    gw_FuldaEcosystemServices_plots_path <-"d:\\work\\projects\\gw_ecosystem_services_Fulda_plain\\results\\plots"
+    
+    setwd("d:\\work\\projects\\git\\gw_ecosystem_services\\Fulda_plains\\R_git\\gtm_River_Fulda_floodplain\\gtm_River_Fulda_floodplain")
+  }  
+}else{
+  gw_FuldaEcosystemServices_plots_path <-"/Users/susanneschmidt/Documents/head/Arbeit/projects/gw_ecosystem_services_Fulda_plain/results/plots"
+  gw_FuldaEcosystemServices_results_txt_path <-"/Users/susanneschmidt/Documents/head/Arbeit/projects/gw_ecosystem_services_Fulda_plain/results/txt"
+  
+  
+  setwd("/Users/susanneschmidt/Documents/head/Arbeit/projects/git/gw_ecosystem_services/Fulda_plains/R_git/gtm_River_Fulda_floodplain/gtm_River_Fulda_floodplain")
+  
+  gw_FuldaEcosystemServices_plots_path <-"/Users/susanneschmidt/Documents/head/Arbeit/projects/gw_ecosystem_services_Fulda_plain/results/plots"
+  gw_FuldaEcosystemServices_results_txt_path <-"/Users/susanneschmidt/Documents/head/Arbeit/projects/gw_ecosystem_services_Fulda_plain/results/txt"
+  
+}
+
+source("gtm.R")
+#TODO should be separate folder, as it was   setwd("/Users/susanneschmidt/Documents/head/Arbeit/projects/git/gw_ecosystem_services/Fulda_plains/R_git/functions")
+source("River_Fulda_floodplain_data_offline.R") #required for parameters variables
+source("River_Fulda_floodplain_parameters_offline.R")            
+
+# urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/River_Fulda_floodplain_prec_plot.R"
+#source(urlfiletext)
+source("River_Fulda_floodplain_prec_plot.R") #function Fulda_prec_plot
+
+
+#urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/River_Fulda_floodplain_data.R"
+#source(urlfiletext)  ##fulda_variables
+
+#urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/River_Fulda_floodplain_parameters.R"
+#source(urlfiletext)
 
 ########
 #functions reactions
-urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/model_functions.R"
-source(urlfiletext)
+#see above urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/model_functions.R"
+#source(urlfiletext)
+source("model_functions.R")
 
-urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/River_Fulda_floodplain_prec_plot.R"
-source(urlfiletext)
 
+#TODO the following block can be outcommented?
+#done in fulda_data_variables Fulda_daily_temp <- read.table("produkt_tu_termin_18850101_20231231_01526.txt" ,sep = ";", header = TRUE)  #needed for Fulda_variables
+#TODO now read in with fulda_variables
+#TODO done above #urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/Fulda_daily_temp_joh_long.txt"
+#Fulda_daily_temp_joh_long <- read.table(urlfiletext,sep = " ", header = TRUE)  
+#Fulda_daily_temp_joh_long <- read.table( "Fulda_daily_temp_joh_long.txt", header = TRUE) #written in model_concrete_rates_with_Fulda_a_la_Soetaert_2025_06_30_gw_temperature_extrapolation in /Users/susanneschmidt/Documents/head/Arbeit/projects/git/gw_ecosystem_services/Fulda_plains/R_git
+#Fulda_daily_temp_joh_long$dateRi <- as.Date(Fulda_daily_temp_joh_long$dateRi)
+
+#need to update
 urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/error_measures.R"
 source(urlfiletext)
+source("error_measures.R")
 
 ##########
 #parameters
 ##########
 #parameters from excel file - crucial for reading in the data with the respective temperature scenario
-
-urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/parameters.xlsx"
-parameters <- read.xlsx(urlfiletext, startRow = 3, sheet = 1)
+#see above urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/parameters.xlsx"
+#parvar <- read.xlsx(urlfiletext, startRow = 3, sheet = 1)
+##fulda_variables TODO offline
+parvar <- read.xlsx("parameters.xlsx", startRow = 3, sheet = 1)  
 
 
 ##########
 #reading in Fulda data from file
 ##########
 
-scenario_with_1_or_without_0_MO <-  parameters$scenario_with_1_or_without_0_MO[run]  
-scenario_with_1_or_without_0_fauna <- parameters$scenario_with_1_or_without_0_fauna[run]  
+scenario_with_1_or_without_0_MO <-  parvar$scenario_with_1_or_without_0_MO[run]  
+scenario_with_1_or_without_0_fauna <- parvar$scenario_with_1_or_without_0_fauna[run]  
 
-factor_CC_MO <-  parameters$factor_CC_MO[run]
-factor_CC_fauna <-  parameters$factor_CC_fauna[run]
+factor_CC_MO <-  parvar$factor_CC_MO[run]
+factor_CC_fauna <-  parvar$factor_CC_fauna[run]
 
 #this depends on the two scenario variables scenario_with_1_or_without_0_MO and scenario_with_1_or_without_0_fauna
 fulda_variables_read_in <- fulda_variables(run, factor_CC_MO, factor_CC_fauna)
@@ -87,8 +155,7 @@ chem_ordered_per_date_1978_1981$group_letter <- factor(chem_ordered_per_date_197
 
 #read parameters variables  from file
 parameters_read_in <- read_parameters(run)
-names(parameters_read_in) <- c("delta_t", "max_t", "aquifer_depth", "import_MO_het", "scenario_with_1_or_without_0_fauna", "scenario_with_1_or_without_0_MO", "mortalityRate", "import_fauna", "yield_ac", "yield_MO", "K_MO_at_temp", "rMO_BOC_uptake_per_day_at_lab_temperature", "rFauna_MO_uptake_per_day_at_TEMP", "k1", "excretionRate",  "RECHARGE_COD_mol_per_m3_per_day_df", "lab_temp", "K_ac", "growth_model_MO_type", "growth_model_fauna_type", "mortalityFraction_per_degree", "microbe_loss_factor_when_no_fauna") 
-#based on the data read in above and the parameters read in here, some further variables are derived within this function: e.g. "RECHARGE_COD_mol_per_m3_per_day_df"
+names(parameters_read_in) <- c("delta_t", "max_t", "aquifer_depth", "import_MO_het", "scenario_with_1_or_without_0_fauna", "scenario_with_1_or_without_0_MO", "mortalityRate", "import_fauna", "yield_ac", "yield_MO", "K_MO_at_temp", "rMO_BOC_uptake_per_day_at_lab_temperature", "rFauna_MO_uptake_per_day_at_TEMP", "k1", "excretionRate", "TOC_COD_mol_m2_yr_precipitation", "RECHARGE_COD_mol_per_m3_per_day_df", "lab_temp", "K_ac", "growth_model_MO_type", "growth_model_fauna_type", "mortalityFraction_per_degree", "microbe_loss_factor_when_no_fauna") 
 
 list2env(parameters_read_in, globalenv())
 
@@ -102,7 +169,7 @@ if(is.na(max_t)){
 #creating temperature scenarios
 ##########
 
-temperature_scenario <- parameters$temperature_scenario[run]
+temperature_scenario <- parvar$temperature_scenario[run]
 
 Fulda_daily_temp_joh_long$dateRi <- as.Date(Fulda_daily_temp_joh_long$dateRi)
 #not used at this instance:
@@ -127,7 +194,13 @@ DETR_1978_1981_mean_per_group_and_date <- chem_ordered_per_date_1978_1981 %>%
 chem_ordered_per_date_1978_1981_mean_BOC_per_group_and_date <- chem_ordered_per_date_1978_1981 %>%
   dplyr::filter(!is.na(BOC_mol_COD_L)) %>%
   dplyr::group_by(Date, kmeans4gr)%>%
-  dplyr::summarise(BOC_mol_COD_L = mean(BOC_mol_COD_L, na.rm = TRUE)) 
+  dplyr::summarise(BOC_mol_COD_L = mean(BOC_mol_COD_L, na.rm = TRUE)) %>%
+  dplyr::mutate(ID = paste(Date, kmeans4gr, sep = "_"))%>%
+  dplyr::mutate(x = BOC_mol_COD_L)
+#TODO the ID not needed when the more generic join is used
+#results_df_ <- results_df %>%
+#dplyr::mutate(ID = paste(dateRi, group, sep = "_"))%>%
+#dplyr::mutate(y = BOC)
 
 #microbes
 MO_het_1978_1981_mean_per_group_and_date <- chem_ordered_per_date_1978_1981 %>%
@@ -146,7 +219,6 @@ fauna_deep_PerSamplPerTaxonWide_bm_sum_no_high_biomass  <- fauna_deep_PerSamplPe
   dplyr::filter(bm_mol_COD_perL < 0.00001) #for visualization - explained in text and caption
 maxfaunaplot <-max(fauna_deep_PerSamplPerTaxonWide_bm_sum_no_high_biomass$bm_mol_COD_perL)
 
-
 fauna_deep_PerSamplPerTaxonWide_bm_sum_for_plot <- fauna_deep_PerSamplPerTaxonWide_bm_sum %>%
   dplyr::filter(!is.na(bm_mol_COD_perL))%>%
   dplyr::filter(!is.na(kmeans4gr))
@@ -159,8 +231,9 @@ fauna_mean_per_group_and_date <- fauna_deep_PerSamplPerTaxonWide_bm_sum %>%
   dplyr::mutate(x = bm_mol_COD_perL)
 
 ##########
-#container for results of the error measures derivation
+#container for results of the model fit
 ##########
+
 
 error_measures_data_table <- data.frame(run = NA, group = NA, variable = NA, R2 = NA, MAE = NA, RMSE = NA, MB = NA, NSE = NA, N = NA)
 
@@ -168,8 +241,10 @@ error_measures_data_table <- data.frame(run = NA, group = NA, variable = NA, R2 
 #reading in Fulda precitiation plot - does not depend on model variables, but depends on Fulda_daily_prec in fulda_variables_read_in, and thus, cannot be read in earlier than this
 ##########
 
-urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/River_Fulda_floodplain_prec_plot.R"
-source(urlfiletext)
+#urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/River_Fulda_floodplain_prec_plot.R"
+#source(urlfiletext)
+
+#TODO done above for offline
 
 Fulda_prec_plotted <- Fulda_prec_plot(enddate = t_max)
 
@@ -273,6 +348,7 @@ results4$BOC[1] <- BOC_gr4_t0
 results4$MO_het[1] <- MO_het_gr4_t0
 results4$fauna[1] <- fauna_gr4_t0
 
+
 results <- rbind(results1, results2, results3, results4)
 
 #results$group_letter <- ifelse(results$group ==  2, "P", ifelse(results$group == 3, "R" , ifelse (results$group == 4, "A", ifelse (results$group == 1, "M", NA))))
@@ -283,91 +359,14 @@ uniquedatevector <- unique(results$dateRi)
 uniquegroupvector <- unique(results$group)
 uniquegrouplettervector <- unique(results$group_letter)
 
+#TODO for just the modelling, it is sufficient to do this here. However, for the function and sensitivity modelling, it needs to be done earlier ?!
+#chem_ordered_per_date_1978_1981_BOC_joined <- left_join(chem_ordered_per_date_1978_1981_mean_BOC_per_group_and_date, results_df, by =  c("Date" = "dateRi", "kmeans4gr" = "group"))
+results_joined <- dplyr::left_join(results, chem_ordered_per_date_1978_1981_mean_BOC_per_group_and_date, by =  c( "dateRi" = "Date" , "group" = "kmeans4gr"  ))
+#TODO 29.11. hang on - this is now superflusous because I have constructed the results file from - no, from meteo - I do need to join the BOC data - or do I do that from the start ?! for SA yes
 
+#calling the function of the time step wise groundwater trophic model (gtm) 
 #the following for loop is largely consistent with v. 1 . In v. 2 the for loop here can be replaced by a call to the function gtm, see below the loop 
-for (g in 1:length(unique(results$group))){
-  CC_group_MO_g <- CC_table_MO$CC[CC_table_MO$group == uniquegroupvector[g]]
-  CC_group_fauna_g <- CC_table_fauna$CC[CC_table_fauna$group == uniquegroupvector[g]]
-  group_letter_g <- unique(results$group_letter[results$group == uniquegroupvector[g]])
-  
-  Fulda_daily_temp_joh_long_g <- Fulda_daily_temp_joh_long %>%
-    dplyr::filter(group_letter == group_letter_g)
-  
-  for (i in 2:(length(uniquedatevector))) {
-    
-    #groundwater temp.
-    GWTEMP_ti <- Fulda_daily_temp_joh_long_g$gw_temp [Fulda_daily_temp_joh_long_g$dateRi == results$dateRi[i]]
-    
-    RECHARGE_COD_mol_per_m3_per_day_df_ti <- RECHARGE_COD_mol_per_m3_per_day_df$RECHARGE_COD_mol_per_m3_per_day [RECHARGE_COD_mol_per_m3_per_day_df$dateRi == uniquedatevector[i]]
-    
-    RECHARGE_COD_mol_per_L_per_day_df_ti <- RECHARGE_COD_mol_per_m3_per_day_df_ti /1000
-    
-    #take the respective field of the  Date == Date[i] aund group == group[g] 
-    DETRITUS_ti_minus_1 <- results$DETRITUS[results$dateRi == uniquedatevector[i-1] & results$group == uniquegroupvector[g]]     
-    BOC_ti_minus_1 <- results$BOC[results$dateRi == uniquedatevector[i-1] & results$group == uniquegroupvector[g]]
-    
-    MO_het_ti_minus_1 <- results$MO_het[results$dateRi == uniquedatevector[i-1] & results$group == uniquegroupvector[g]] 
-    
-    Fauna_ti_minus_1 <- results$fauna[results$dateRi == uniquedatevector[i-1] & results$group == uniquegroupvector[g]] 
-    
-    BOC_import_from_detritus_ti <- dBOC_from_detritus_dt(k1, DETRITUS_ti_minus_1) #mol COD / L
-    
-    if (scenario_with_1_or_without_0_fauna == 1) {
-      
-      Excretion <- dExcretion_dt(excretionRate, Fauna_ti_minus_1 )
-      
-      Mortality <- dMortality_dt(mortalityRate, mortalityFraction_per_degree, Fauna_ti_minus_1, GWTEMP_ti  ) 
-      
-      f_S_fauna <- dMO_fauna_degradation_factor_dt(MO_het_ti_minus_1,   rFauna_MO_uptake_per_day_at_TEMP , K_MO_at_temp, Fauna_ti_minus_1, delta_t, growth_model_fauna_type, CC_group_fauna_g)
-      
-      Fauna_ti_list <- dMO_fauna_uptake_dt(MO_het_ti_minus_1,   rFauna_MO_uptake_per_day_at_TEMP , K_MO_at_temp, Fauna_ti_minus_1, delta_t, growth_model_fauna_type, CC_group_fauna_g, yield_MO, Excretion , Mortality)
-      
-      Fauna_growth <- Fauna_ti_list[[1]]
-      Fauna_ti <- Fauna_ti_list[[2]]
-      
-    }else{
-      f_S_fauna <- 0
 
-      Fauna_ti <- 0
-      Fauna_growth <- 0
-      Excretion <- 0
-      Mortality <- 0
-    }
-    
-    
-    rMO_BOC_uptake_per_day_at_TEMP <- d_BOC_MO_het_uptake_dt_per_day_per_temperature( rMO_BOC_uptake_per_day_at_lab_temperature,  GWTEMP_ti, lab_temp) 
-    
-    K_ac_at_TEMP <- d_K_ac_per_temperature(K_ac, lab_temp, GWTEMP_ti) 
-    
-    #how much COD = BOC degraded 
-    f_S_MO <- dBOC_degradation_factor_dt(BOC_ti_minus_1,   rMO_BOC_uptake_per_day_at_TEMP, K_ac_at_TEMP, MO_het_ti_minus_1, delta_t, growth_model_MO_type, CC_group_MO_g)
-    
-    MO_het_ti_list  <- dBOC_MO_degradation_dt(BOC_ti_minus_1,   rMO_BOC_uptake_per_day_at_TEMP,  K_ac_at_TEMP, MO_het_ti_minus_1, yield_ac, f_S_fauna, delta_t, growth_model_MO_type, CC_group_MO_g) 
-    MO_growth <- MO_het_ti_list[[1]]
-    MO_het_ti <- MO_het_ti_list[[2]]
-    
-    BOC_ti_interim <- dBOC_stock_dt(BOC_ti_minus_1,  f_S_MO, BOC_import_from_detritus_ti, Excretion) 
-    BOC_ti            <- max(0, BOC_ti_interim)      # to avoid errors when COD = BOC becomes slightly negative.. From Soetaert (2008)
-    
-    #since this happens in this time step, the new Detritus is not used for further reactions in this time step - the detritus from the time step before is used
-    DETRITUS_ti <- dDETRITUS_dt( k1, DETRITUS_ti_minus_1, RECHARGE_COD_mol_per_L_per_day_df_ti, Mortality ) 
-    
-    results$MO_het[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- MO_het_ti
-    
-    results$fauna[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- Fauna_ti
-    
-    results$BOC[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- BOC_ti
-    
-    results$growthrate[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- rMO_BOC_uptake_per_day_at_TEMP
-    
-    results$DETRITUS[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- DETRITUS_ti 
-    
-    results$import_from_detritus[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- BOC_import_from_detritus_ti 
-    
-  } #end groups
-}#end time
-
-#this for loop can be replaced by a call to the function gtm() implemented in v. 2.0.0 of the github code
 results <- gtm()
 
 #ggplot requires the data to be in data frame
@@ -375,17 +374,52 @@ results_df <- as.data.frame(results)
 
 #saving this run's data for later use
 setwd(gw_FuldaEcosystemServices_results_txt_path) 
-write.table(results_df, paste0("results_df_run_",run,".txt"), row.names = FALSE)
+write.table(results_df, paste0("results_df_run_",run,"_2025_12_03.txt"), row.names = FALSE)
 
 #for plotting several variables, make long form of the results data frame
 results_df_long <- results_df %>%
   tidyr::pivot_longer(cols = c(BOC, DETRITUS, MO_het, fauna), names_to = "variable") 
+write.table(results_df, paste0("results_df_long_run_",run,"_2025_12_03.txt"), row.names = FALSE)
 
-write.table(results_df, paste0("results_df_long_run_",run,".txt"), row.names = FALSE)
+
+
+#this block is for read in data - outcomment this block for fresh data !
+#in order to produce plots which compare the runs, read the run results from files saved previously
+setwd(gw_FuldaEcosystemServices_results_txt_path)
+#TODO with date ?!
+results_df_1 <- read.table( "results_df_run_1_2025_12_03.txt", header = TRUE)
+results_df_2 <- read.table( "results_df_run_2_2025_12_03.txt", header = TRUE)
+results_df_3 <- read.table( "results_df_run_3_2025_12_03.txt", header = TRUE)
+results_df_4 <- read.table( "results_df_run_4_2025_12_03.txt", header = TRUE)
+results_df_5 <- read.table( "results_df_run_5_2025_12_03.txt", header = TRUE)
+results_df_6 <- read.table( "results_df_run_6_2025_12_03.txt", header = TRUE)
+results_df_7 <- read.table( "results_df_run_7_2025_12_03.txt", header = TRUE)
+results_df_8 <- read.table( "results_df_run_8_2025_12_03.txt", header = TRUE)
+
+results_df_1$run <- 1
+results_df_2$run <- 2
+results_df_3$run <- 3
+results_df_4$run <- 4
+results_df_5$run <- 5
+results_df_6$run <- 6
+results_df_7$run <- 7
+results_df_8$run <- 8
+
+#if using one of the saved ones for producing the  figures below, prepare the respective data, by replacing xx with the number of the run
+# results_df <- results_df_xx
+# results_df$dateRi <- as.Date(results_df$dateRi)
+# results_df$group_letter <- factor(results_df$group_letter , levels = c("R", "M", "P", "A"))
+# run <- xx
+
+# e.g. for plotting from previously saved file
+run <- 1
+results_df <- results_df_1
+results_df$dateRi <- as.Date(results_df$dateRi)
+results_df$group_letter <- factor(results_df$group_letter , levels = c("R", "M", "P", "A"))
+#END block read in data - outcomment for fresh data !
 
 
 unified_axes <- 1 # 1 = make the same axis for all four subplots , representing the four groups . 0 = axes reflect the groups' minima and maxima
-
 
 #combine measured data with modelled data to calculate model accuracy - for that, join model results to measured values
 DETR_1978_1981_mean_per_group_and_date_joined <- left_join(DETR_1978_1981_mean_per_group_and_date, results_df, by =  c("Date" = "dateRi", "kmeans4gr" = "group"))
@@ -420,17 +454,18 @@ results_df$group_letter <- factor(results_df$group_letter, levels = c("R", "M", 
 geomtexttable_DETRITUS$x <- as.Date(geomtexttable_DETRITUS$x)
 geomtexttable_DETRITUS$y <- as.numeric(geomtexttable_DETRITUS$y)
 geomtexttable_DETRITUS$y_R2 <- geomtexttable_DETRITUS$y-max(DETR_1978_1981_mean_per_group_and_date_joined$OS_mol_COD_L, DETR_1978_1981_mean_per_group_and_date_joined$DETRITUS, na.rm = TRUE)*.05
-geomtexttable_DETRITUS$y_MAE <- geomtexttable_DETRITUS$y-max(DETR_1978_1981_mean_per_group_and_date_joined$OS_mol_COD_L, na.rm = TRUE)*.15
-geomtexttable_DETRITUS$y_RMSE <- geomtexttable_DETRITUS$y-max(DETR_1978_1981_mean_per_group_and_date_joined$OS_mol_COD_L, na.rm = TRUE)*.35
-geomtexttable_DETRITUS$y_NSE <- geomtexttable_DETRITUS$y-max(DETR_1978_1981_mean_per_group_and_date_joined$OS_mol_COD_L, na.rm = TRUE)*.55
-geomtexttable_DETRITUS$y_MB <- geomtexttable_DETRITUS$y-max(DETR_1978_1981_mean_per_group_and_date_joined$OS_mol_COD_L, na.rm = TRUE)*.75
-geomtexttable_DETRITUS$y_N <- geomtexttable_DETRITUS$y-max(DETR_1978_1981_mean_per_group_and_date_joined$OS_mol_COD_L, na.rm = TRUE)*.9
+geomtexttable_DETRITUS$y_MAE <- geomtexttable_DETRITUS$y-max(DETR_1978_1981_mean_per_group_and_date_joined$OS_mol_COD_L, na.rm = TRUE)*.15#.025
+geomtexttable_DETRITUS$y_RMSE <- geomtexttable_DETRITUS$y-max(DETR_1978_1981_mean_per_group_and_date_joined$OS_mol_COD_L, na.rm = TRUE)*.35#.05
+geomtexttable_DETRITUS$y_NSE <- geomtexttable_DETRITUS$y-max(DETR_1978_1981_mean_per_group_and_date_joined$OS_mol_COD_L, na.rm = TRUE)*.55#.075
+geomtexttable_DETRITUS$y_MB <- geomtexttable_DETRITUS$y-max(DETR_1978_1981_mean_per_group_and_date_joined$OS_mol_COD_L, na.rm = TRUE)*.75#.1
+geomtexttable_DETRITUS$y_N <- geomtexttable_DETRITUS$y-max(DETR_1978_1981_mean_per_group_and_date_joined$OS_mol_COD_L, na.rm = TRUE)*.9#.125
 geomtexttable_DETRITUS$R2 <- paste("R2 =", geomtexttable_DETRITUS$R2)
 geomtexttable_DETRITUS$MAE <- paste("MAE =", geomtexttable_DETRITUS$MAE)
 geomtexttable_DETRITUS$RMSE <- paste("RMSE =", geomtexttable_DETRITUS$RMSE)
 geomtexttable_DETRITUS$NSE <- paste("NSE =", geomtexttable_DETRITUS$NSE)
 geomtexttable_DETRITUS$MB <- paste("MB =", geomtexttable_DETRITUS$MB)
 geomtexttable_DETRITUS$N <- paste("N =", geomtexttable_DETRITUS$N)
+
 
 # ylablist <- list( bquote( paste( "Detritus") ) ,
 #                bquote( paste( "[mol COD  ", L^{-1}, " ]" ) ) ,
@@ -527,9 +562,13 @@ for (i in 1: length(unique(chem_ordered_per_date_1978_1981_BOC_joined$kmeans4gr)
 error_measures_data_BOC_groups <- error_measures_data_BOC_groups %>%
   dplyr::filter(!is.na(N))
 
+my.formula <- y ~ x
 
 #in the sensitivity analysis version of this file, this join is done before the sensitivity analysis
-chem_ordered_per_date_1978_1981_mean_BOC_per_group_and_date_joined <- dplyr::left_join(results, chem_ordered_per_date_1978_1981_mean_BOC_per_group_and_date, by =  c( "dateRi" = "Date" , "group" = "kmeans4gr"  ))
+results_joined <- dplyr::left_join(results, chem_ordered_per_date_1978_1981_mean_BOC_per_group_and_date, by =  c( "dateRi" = "Date" , "group" = "kmeans4gr"  ))
+
+max_BOC <- max(chem_ordered_per_date_1978_1981$BOC_mol_COD_L, results_joined$BOC, na.rm =TRUE)
+
 
 
 #make a table with 4x the same coordinates x, y, and for the label: the column BOC
@@ -562,9 +601,11 @@ geomtexttable_BOC$group_letter <- factor(geomtexttable_BOC$group_letter, levels 
 Fulda_BOC_plot <- chem_ordered_per_date_1978_1981 %>%
   dplyr::filter(!is.na(BOC_mol_COD_L)) %>%
   ggplot() +
+  
   geom_point(data = results_df, aes(x = dateRi, y = BOC, colour = as.factor(group_letter)),   pch = 16, size = 0.5, show.legend = FALSE)+
   geom_point(aes(x = Date, y = BOC_mol_COD_L, fill = as.factor(group_letter)),  pch = 21  , colour = "black", show.legend = FALSE)  +
   scale_x_date(limits = c(t_0, t_max) )+
+  #labs(x = "Date", y = "BOC\n [mol COD / L]\nmeasured [o] and\nmodelled [.]")+ 
   labs(x = "Date", y = "BOC<br> [mol COD L<sup>-1</sup>]<br> measured [o] and <br> modelled [.]")+ 
   scale_fill_okabe_ito()+ 
   scale_color_okabe_ito()+
@@ -606,7 +647,6 @@ if (unified_axes == 1) {
   )
 }
 
-my.formula <- y ~ x
 
 (Fulda_BOC_plot_trends <- Fulda_BOC_plot +
     geom_smooth(method = "lm",
@@ -615,9 +655,9 @@ my.formula <- y ~ x
 ) 
 
 
-max_MO_het_for_plot <- max(chem_ordered_per_date_1978_1981$total_Prok_mol_COD_L, results_df$MO_het, na.rm =TRUE)
 
-#combine measured data with modelled data to calculate model accuracy - for that, join model results to the average per group and date of measured values for microbial numbers
+
+#combine measured data with modelled data to calculate model accuracy - for that, join model results to measured values for microbial numbers
 MO_het_1978_1981_mean_per_group_and_date_joined <- left_join(MO_het_1978_1981_mean_per_group_and_date, results_df, by =  c("Date" = "dateRi", "kmeans4gr" = "group"))
 
 error_measures_data_MO_het_groups <- error_measures_data_table
@@ -633,9 +673,7 @@ for (i in 1: length(unique(MO_het_1978_1981_mean_per_group_and_date_joined$kmean
 error_measures_data_MO_het_groups <- error_measures_data_MO_het_groups %>%
   dplyr::filter(!is.na(N))
 
-geomtexttable_MO <- as.data.frame(cbind("group" = error_measures_data_MO_het_groups$group, 
-                                        "x" = rep("1980-04-01",4), 
-                                        "y" = rep(max_MO_het_for_plot*.95, 4),
+geomtexttable_MO <- as.data.frame(cbind("group" = error_measures_data_MO_het_groups$group, "x" = rep("1980-04-01",4), "y" = rep(max(chem_ordered_per_date_1978_1981$MO_het_mol_COD_L, results_df$MO_het)*.95, 4),
                                         "R2" = error_measures_data_MO_het_groups$R2 ,
                                         "MAE" = error_measures_data_MO_het_groups$MAE ,
                                         "RMSE" = error_measures_data_MO_het_groups$RMSE ,
@@ -676,8 +714,6 @@ Fulda_MO_plot <- chem_ordered_per_date_1978_1981 %>%
   )+
   
   scale_x_date(limits = c(t_0, t_max) )+
-  
-  scale_y_continuous (limits = c(0, max_MO_het_for_plot) )+
   
   #labs(x = "Date", y = "Microbial dry mass\n[mol COD / L]\nmeasured [o] and\nmodelled [.]")+ 
   labs(x = "Date", y = "Microbial dry mass<br> [mol COD L<sup>-1</sup>]<br> measured [o] and <br>modelled [.]")+ 
@@ -735,6 +771,7 @@ if (unified_axes == 1) {
 fauna_mean_per_group_and_date_joined <- left_join(fauna_mean_per_group_and_date, results_df, by =  c("dateRi" = "dateRi", "kmeans4gr" = "group"))
 
 error_measures_data_fauna_groups <- error_measures_data_table
+
 for (i in 1: length(unique(fauna_mean_per_group_and_date_joined$kmeans4gr))) {
   fauna_mean_per_group_and_date_joined_group <- fauna_mean_per_group_and_date_joined %>%
     dplyr::filter(kmeans4gr == i)
@@ -784,6 +821,7 @@ Fulda_fauna_plot <-fauna_deep_PerSamplPerTaxonWide_bm_sum_for_plot %>%
   geom_point(data = fauna_deep_PerSamplPerTaxonWide_bm_sum_for_plot, aes(x = dateRi, y = bm_mol_COD_perL , fill = as.factor(group_letter)),  pch = 21, colour = "black", show.legend = FALSE )+
   lims(y = c(0,maxfaunaplot))+
   scale_x_date(limits = c(t_0, t_max)  )+
+  #labs(x = "Date", y = "Fauna dry mass\n[mol COD / L]\nmeasured [o] and\nmodelled [.]")+ 
   labs(x = "Date", y = "Fauna dry mass<br> [mol COD L<sup>-1</sup>]<br> measured [o] and <br>modelled [.]")+ 
   
   scale_fill_okabe_ito()+ 
@@ -839,12 +877,12 @@ Fulda_prec_plotted +  Fulda_Detritus_partOrganics_plot  + Fulda_BOC_plot + Fulda
 setwd(gw_FuldaEcosystemServices_plots_path)
 if (unified_axes == 1) {
   #save as png AND as pdf - for some journals, pdf are preferred, for others, png
-  ggsave(paste0("model_measured_run_",run,"_with_MO_one_y_scale_w_model_qual.png"), width = 10, height = 9)
-  ggsave(paste0("model_measured_run_",run,"_with_MO_one_y_scale_w_model_qual.pdf"), width = 10, height = 9)
+  ggsave(paste0("model_measured_run_",run,"_with_MO_one_y_scale_w_model_qual_2025_12_03.png"), width = 10, height = 9)
+  ggsave(paste0("model_measured_run_",run,"_with_MO_one_y_scale_w_model_qual_2025_12_03.pdf"), width = 10, height = 9)
 }else{
   #save as png AND as pdf
-  ggsave(paste0("model_measured_run_",run,"_with_MO_free_y_scale_w_model_qual.png"), width = 10, height = 9)
-  ggsave(paste0("model_measured_run_",run,"_with_MO_free_y_scale_w_model_qual.pdf"), width = 10, height = 9)
+  ggsave(paste0("model_measured_run_",run,"_with_MO_free_y_scale_w_model_qual_2025_12_03.png"), width = 10, height = 9)
+  ggsave(paste0("model_measured_run_",run,"_with_MO_free_y_scale_w_model_qual_2025_12_03.pdf"), width = 10, height = 9)
 }
 
 
@@ -853,52 +891,28 @@ if (unified_axes == 1) {
 
 setwd(gw_FuldaEcosystemServices_plots_path)
 if (unified_axes == 1) {
-  ggsave(paste0("model_measured_trend_run_",run,"_with_MO_one_y_scale_w_model_qual.png"), width = 10, height = 9)
-  ggsave(paste0("model_measured_trend_run_",run,"_with_MO_one_y_scale_w_model_qual.pdf"), width = 10, height = 9)
+  ggsave(paste0("model_measured_trend_run_",run,"_with_MO_one_y_scale_w_model_qual_2025_12_03.png"), width = 10, height = 9)
+  ggsave(paste0("model_measured_trend_run_",run,"_with_MO_one_y_scale_w_model_qual_2025_12_03.pdf"), width = 10, height = 9)
 }else{
-  ggsave(paste0("model_measured_trend_run_",run,"_with_MO_free_y_scale_w_model_qual.png"), width = 10, height = 9)
-  ggsave(paste0("model_measured_trend_run_",run,"_with_MO_free_y_scale_w_model_qual.png"), width = 10, height = 9)
+  ggsave(paste0("model_measured_trend_run_",run,"_with_MO_free_y_scale_w_model_qual_2025_12_03.png"), width = 10, height = 9)
+  ggsave(paste0("model_measured_trend_run_",run,"_with_MO_free_y_scale_w_model_qual_2025_12_03.png"), width = 10, height = 9)
 }
 
 
-#this block is for read in data - outcomment this block for fresh data !
-#in order to produce plots which compare the runs, read the four run results from files saved previously
-setwd(gw_FuldaEcosystemServices_results_txt_path)
 
-results_df_1 <- read.table( "results_df_run_1.txt", header = TRUE)
-results_df_2 <- read.table( "results_df_run_2.txt", header = TRUE)
-results_df_3 <- read.table( "results_df_run_3.txt", header = TRUE)
-results_df_4 <- read.table( "results_df_run_4.txt", header = TRUE)
-results_df_5 <- read.table( "results_df_run_5.txt", header = TRUE)
-results_df_6 <- read.table( "results_df_run_6.txt", header = TRUE)
-
-#if using one of the saved ones for producing the above figures, prepare the respective data, by replacing xx with the number of the run
-# results_df <- results_df_xx
-results_df$dateRi <- as.Date(results_df$dateRi)
-results_df$group_letter <- factor(results_df$group_letter , levels = c("R", "M", "P", "A"))
-run <- xx
-
-results_df_1$run <- 1
-results_df_2$run <- 2
-results_df_3$run <- 3
-results_df_4$run <- 4
-results_df_5$run <- 5
-results_df_6$run <- 6
-#END block read in data - outcomment for fresh data !
-
-#the combined plots in the following require the first 6 (or 8) scenarios to have been read in with the outcommented block above
+#the code from here requires reading in the results as in the block marked for outcommenting above 
 results_df__for_overview_all <- rbind(results_df_1, results_df_2, results_df_3, results_df_4, results_df_5, results_df_6)
 
 
 setwd(gw_FuldaEcosystemServices_results_txt_path)
 
-write.table(results_df__for_overview_all, "results_df__for_overview_all_for_barplot_1_2_3_4_5_6__.txt", row.names = FALSE)
+write.table(results_df__for_overview_all, "results_df__for_overview_all_for_barplot_1_2_3_4_5_6___2025_12_03.txt", row.names = FALSE)
 
 results_df__for_overview_all$dateRi <- as.Date(results_df__for_overview_all$dateRi)
 
 results_df__for_overview_all$group_letter <- factor(results_df__for_overview_all$group_letter , levels = c("R", "M", "P", "A"))
 
-
+#TODO now redundant ?! names(results_df__for_overview_all) <- sub("value", "value_from_merge", names(results_df__for_overview_all))
 results_df__for_overview_all_long <- results_df__for_overview_all %>%
   dplyr::group_by(dateRi, group_letter, run) %>%
   tidyr::pivot_longer(cols = c(DETRITUS, BOC, MO_het, fauna), names_to = "variable", values_to = "value")
@@ -958,9 +972,9 @@ lm_i_list_ <- lm_i_list %>%
   dplyr::select(c("run", "group_letter", "variable", "coefficient_intercept", "coefficient_slope",  "F_value", "p_val", "fitted_diff_over_observation_period", "conc_t_0", "conc_t_max", "fitted_conc_t_0", "fitted_conc_t_max", "group_letter", "max_"))
 
 setwd(gw_FuldaEcosystemServices_results_txt_path)
-write.table(lm_i_list_, "results_df__lm_1_2_3_4_5_6__fp.txt", row.names = FALSE)
+write.table(lm_i_list_, "results_df__lm_1_2_3_4_5_6__fp_2025_12_03.txt", row.names = FALSE)
 #reading in an already existing file with results
-# lm_i_list<- read.table( "results_df__lm_1_2_3_4_5_6__fp.txt", header = TRUE)
+# lm_i_list<- read.table( "results_df__lm_1_2_3_4_5_6__fp_2025_12_03.txt", header = TRUE)
 
 #colors chosen according to https://stackoverflow.com/questions/57153428/r-plot-color-combinations-that-are-colorblind-accessible
 results_df__for_overview_all$colour_for_plot <- ifelse(results_df__for_overview_all$run == 1, "#009E73",ifelse(results_df__for_overview_all$run == 3, "#0072B2", ifelse(results_df__for_overview_all$run == 5, "#56B4E9", ifelse(results_df__for_overview_all$run == 2, "#F0E442", ifelse(results_df__for_overview_all$run == 4, "#E69F00", ifelse(results_df__for_overview_all$run == 6, "#D55E00", "black"))))))
@@ -1014,14 +1028,14 @@ if (unified_axes == 1) {
      facet_wrap(.~group_letter, ncol = 4))
   
   setwd(gw_FuldaEcosystemServices_plots_path)
-  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6__one_y_scale.png"), width = 8, height = 3)
-  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6__one_y_scale.pdf"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6__one_y_scale_2025_12_03.png"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6__one_y_scale_2025_12_03.pdf"), width = 8, height = 3)
   
 }else{
   (plot_trends_COD <- plot_trends_COD+
      facet_wrap(.~group_letter, scales="free_y", ncol = 4))
-  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6__free_y_scale.png"), width = 8, height = 3)
-  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6__free_y_scale.pdf"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6__free_y_scale_2025_12_03.png"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6__free_y_scale_2025_12_03.pdf"), width = 8, height = 3)
 }
 
 
@@ -1056,8 +1070,8 @@ if (unified_axes == 1) {
     facet_wrap(.~group_letter, scales="free_y", ncol = 4)
 )
 setwd(gw_FuldaEcosystemServices_plots_path)
-ggsave("plot_trends_MO_1_2_3_4_5_6__.png", width = 8, height = 2.5)
-ggsave("plot_trends_MO_1_2_3_4_5_6__.pdf", width = 8, height = 2.5)
+ggsave("plot_trends_MO_1_2_3_4_5_6___2025_12_03.png", width = 8, height = 2.5)
+ggsave("plot_trends_MO_1_2_3_4_5_6___2025_12_03.pdf", width = 8, height = 2.5)
 
 
 
@@ -1075,7 +1089,7 @@ ggsave("plot_trends_MO_1_2_3_4_5_6__.pdf", width = 8, height = 2.5)
     guides(colour = guide_legend(override.aes = list(line = override.line, colour = override.col, linewidth = override.linewidth))) +
     
     #labs(x = "Date", y = "Fauna [mol COD / L]") +
-    labs(x = "Date", y = "Fauna dry mass [mol COD L<sup>-1</sup>]")+ 
+    labs(x = "Date", y = "Fauna dry mass [mol COD L<sup>-1</sup>])+ 
     theme(panel.background = element_rect(fill = "white",  colour = "black",  linetype = "solid" ),
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
@@ -1089,8 +1103,8 @@ ggsave("plot_trends_MO_1_2_3_4_5_6__.pdf", width = 8, height = 2.5)
     facet_wrap(.~group_letter, scales="free_y", ncol = 4)
 )
 setwd(gw_FuldaEcosystemServices_plots_path)
-ggsave("plot_trends_fauna_1_2_3_4_5_6__.png", width = 8, height = 2.5)
-ggsave("plot_trends_fauna_1_2_3_4_5_6__.pdf", width = 8, height = 2.5)
+ggsave("plot_trends_fauna_1_2_3_4_5_6___2025_12_03.png", width = 8, height = 2.5)
+ggsave("plot_trends_fauna_1_2_3_4_5_6___2025_12_03.pdf", width = 8, height = 2.5)
 
 
 
@@ -1103,12 +1117,13 @@ results_df__for_overview_all <- rbind(results_df_1, results_df_2, results_df_3, 
 
 setwd(gw_FuldaEcosystemServices_results_txt_path)
 
-write.table(results_df__for_overview_all, "results_df__for_overview_all_for_barplot_1_2_3_4_5_6_7_8.txt", row.names = FALSE)
+write.table(results_df__for_overview_all, "results_df__for_overview_all_for_barplot_1_2_3_4_5_6_7_8__2025_12_03.txt", row.names = FALSE)
 
 results_df__for_overview_all$dateRi <- as.Date(results_df__for_overview_all$dateRi)
 
 results_df__for_overview_all$group_letter <- factor(results_df__for_overview_all$group_letter , levels = c("R", "M", "P", "A"))
 
+#TODO now redundant ?! names(results_df__for_overview_all) <- sub("value", "value_from_merge", names(results_df__for_overview_all))
 results_df__for_overview_all_long <- results_df__for_overview_all %>%
   dplyr::group_by(dateRi, group_letter, run) %>%
   tidyr::pivot_longer(cols = c(DETRITUS, BOC, MO_het, fauna), names_to = "variable", values_to = "value")
@@ -1168,8 +1183,8 @@ lm_i_list_ <- lm_i_list %>%
   dplyr::select(c("run", "group_letter", "variable", "coefficient_intercept", "coefficient_slope",  "F_value", "p_val", "fitted_diff_over_observation_period", "conc_t_0", "conc_t_max", "fitted_conc_t_0", "fitted_conc_t_max", "group_letter", "max_"))
 
 setwd(gw_FuldaEcosystemServices_results_txt_path)
-write.table(lm_i_list_, "results_df__lm_1_2_3_4_5_6_7_8_.txt", row.names = FALSE)
-# lm_i_list<- read.table( "results_df__lm_1_2_3_4_5_6_7_8_.txt", header = TRUE)
+write.table(lm_i_list_, "results_df__lm_1_2_3_4_5_6_7_8__fp_2025_12_03.txt", row.names = FALSE)
+# lm_i_list<- read.table( "results_df__lm_1_2_3_4_5_6__fp_2025_12_03.txt", header = TRUE)
 
 #colors chosen according to https://stackoverflow.com/questions/57153428/r-plot-color-combinations-that-are-colorblind-accessible
 #colours of runs 1 to 6 in grey
@@ -1177,9 +1192,31 @@ results_df__for_overview_all$colour_for_plot <- ifelse(results_df__for_overview_
    ifelse(results_df__for_overview_all$run == 7, "#0072B2", 
    ifelse(results_df__for_overview_all$run == 8, "#E69F00", "black"))))))))
 
+#does not work results_df__for_overview_all$colour_for_plot <- factor(results_df__for_overview_all$colour_for_plot, level = c("#2f3030" ,"#2f3030" ,"#2f3030" ,"#2f3030" ,"#2f3030" ,"#2f3030" , "#0072B2",   "#E69F00"))
+
 results_df__for_overview_all$line <- ifelse(results_df__for_overview_all$run == 1, 2,ifelse(results_df__for_overview_all$run == 3, 2, ifelse(results_df__for_overview_all$run == 5, 2,  ifelse(results_df__for_overview_all$run == 2, 2, ifelse(results_df__for_overview_all$run == 4, 2, ifelse(results_df__for_overview_all$run == 6, 2, ifelse(results_df__for_overview_all$run == 7, 1, ifelse(results_df__for_overview_all$run == 8, 1, 1))))))))
 
+#does not work results_df__for_overview_all$line <- factor(results_df__for_overview_all$line, level = c(1, 5, 2,  6, 3,   4))
+
 results_df__for_overview_all$linewidth <- ifelse(results_df__for_overview_all$run == 1, .8,ifelse(results_df__for_overview_all$run == 3, .8, ifelse(results_df__for_overview_all$run == 5, .8, ifelse(results_df__for_overview_all$run == 2, .8, ifelse(results_df__for_overview_all$run == 4, .8, ifelse(results_df__for_overview_all$run == 6, .8, ifelse(results_df__for_overview_all$run == 7, 1, ifelse(results_df__for_overview_all$run == 8, 1.1, 1))))))))
+
+#does not workresults_df__for_overview_all$linewidth <- factor(results_df__for_overview_all$linewidth, level = c(1.2, 1.1, .82, .81, .31, .3))
+
+#the following block not used in the end
+override.col <- c( "#1a1b1a", "#2c2c2c", "#353636", "#373838", "#009E73", "#2d2e2e",  "#0072B2", "#D55E00")
+#override.line <- c(2,2,2,2,2,2, 1, 1)
+override.linewidth <- c(.8, .81, .82, .83, .84, .85, 1, 1)
+
+#the following leads to not all line sbeing shown.
+#how cna i make a legend that contains less elements than groups?
+override.col <- c( "#009E73", "#0072B2", "#D55E00")
+override.line <- c(1, 2, 3)
+override.linewidth <- c( .8, 1, 1.1)
+#and this is wrong sequence
+
+#TODO Insufficient values in manual scale. 6 needed but only 3 provided.
+#it should be 8 - why is 8 not found?
+# END the following block not used in the end
 
 
 #from https://stackoverflow.com/questions/67219891/create-additional-independent-legends-in-ggplot2
@@ -1238,14 +1275,14 @@ if (unified_axes == 1) {
      facet_wrap(.~group_letter, ncol = 4))
   
   setwd(gw_FuldaEcosystemServices_plots_path)
-  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_7_8_one_y_scale.png"), width = 8, height = 3)
-  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_7_8_one_y_scale.pdf"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_7_8_one_y_scale_2025_12_03.png"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_7_8_one_y_scale_2025_12_03.pdf"), width = 8, height = 3)
   
 }else{
   (plot_trends_COD <- plot_trends_COD+
      facet_wrap(.~group_letter, scales="free_y", ncol = 4))
-  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_7_8_free_y_scale.png"), width = 8, height = 3)
-  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_7_8_free_y_scale.pdf"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_7_8_free_y_scale_2025_12_03.png"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_7_8_free_y_scale_2025_12_03.pdf"), width = 8, height = 3)
 }
 
 
@@ -1281,8 +1318,8 @@ if (unified_axes == 1) {
     facet_wrap(.~group_letter, scales="free_y", ncol = 4)
 )
 setwd(gw_FuldaEcosystemServices_plots_path)
-ggsave("plot_trends_MO_1_2_3_4_5_6_7_8.png", width = 8, height = 2.5)
-ggsave("plot_trends_MO_1_2_3_4_5_6_7_8.pdf", width = 8, height = 2.5)
+ggsave("plot_trends_MO_1_2_3_4_5_6___2025_12_03.png", width = 8, height = 2.5)
+ggsave("plot_trends_MO_1_2_3_4_5_6___2025_12_03.pdf", width = 8, height = 2.5)
 
 
 
@@ -1315,6 +1352,6 @@ ggsave("plot_trends_MO_1_2_3_4_5_6_7_8.pdf", width = 8, height = 2.5)
     facet_wrap(.~group_letter, scales="free_y", ncol = 4)
 )
 setwd(gw_FuldaEcosystemServices_plots_path)
-ggsave("plot_trends_fauna_1_2_3_4_5_6_7_8.png", width = 8, height = 2.5)
-ggsave("plot_trends_fauna_1_2_3_4_5_6_7_8.pdf", width = 8, height = 2.5)
+ggsave("plot_trends_fauna_1_2_3_4_5_6___2025_12_03.png", width = 8, height = 2.5)
+ggsave("plot_trends_fauna_1_2_3_4_5_6___2025_12_03.pdf", width = 8, height = 2.5)
 

@@ -11,27 +11,26 @@
 #' 
 #' @export
 
-model_execution_gtm <- function(fun_test, X, ...){#sis X is the whole parameter space, from the range.
-
- ###############
- # Check inputs
- ###############
- 
-    #fun_test <- "gtm_MulObj"
-stopifnot(is.character(fun_test),
- 	is.matrix(X))
- 
- ####################
- # Model execution
- ####################
- 	comp_time <- system.time(Y <- t(apply(X, 1, fun_test, ...))) 
-	#sis apply takes row for row (second argument = 1) of the X parameter combinations, and applies function fun_test
-	
-    Y <- matrix(Y, nrow = nrow(X))
-
-	attributes(Y) <- list(dim = dim(Y),  comp_time = comp_time)
-
-	rownames(Y) <- rownames(X)
-
-	return(Y)
+model_execution_gtm <- function(fun_test, X, ...){# X is the whole parameter space, from the range.
+  
+  ###############
+  # Check inputs
+  ###############
+  
+  stopifnot(is.character(fun_test),
+            is.matrix(X))
+  
+  ####################
+  # Model execution
+  ####################
+  comp_time <- system.time(Y <- t(apply(X, 1, fun_test, ...))) 
+  # apply takes row for row (second argument = 1) of the X parameter combinations, and applies function fun_test
+  
+  Y <- matrix(Y, nrow = nrow(X))
+  
+  attributes(Y) <- list(dim = dim(Y),  comp_time = comp_time)
+  
+  rownames(Y) <- rownames(X)
+  
+  return(Y)
 }

@@ -1,10 +1,10 @@
 #heavily based on https://github.com/SAFEtoolbox/SAFE-R/blob/main/R/scatter_plots.R
 #' Scatter plots of \code{y} against \code{X}
 #'
-#' This function produces scatter plots of the model ouput \code{y} against model inputs \eqn{x(1), x(2), ..., x(M)}
+#' This function produces scatter plots of the model output \code{y} against model inputs \eqn{x(1), x(2), ..., x(M)}
 #'
 #' @param X matrix \code{(N, M)} of \code{N} inputs samples
-#' @param Y vector \code{N} of associated ouput samples
+#' @param Y vector \code{N} of associated output samples
 #' @param prnam vector of characters containing the parameters names
 #' @param ngr number of groups into which the parameters are divided
 #' @export
@@ -25,7 +25,7 @@
 #' # ############################
 #' ## Step 3 (Scatter plots)
 #' # ############################
-#' # Use scatter plots of inputs againts output to visually assess 
+#' # Use scatter plots of inputs against output to visually assess 
 #' # direct effects:
 #' scatter_plots(X,Y)
 #'
@@ -47,8 +47,8 @@ scatter_plots_gtm <-  function(X, Y, prnam = NULL, ngr = 0){
              facet_grid(. ~ parnam, scales = "free") + 
              geom_point() + ylab("Output") + xlab("Inputs") + 
              theme_bw()+
-             theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))#sis
-             ) 
+             theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))#added; important when more than ca. 5 variables
+    ) 
   } else {
     
     N <- length( Y )
