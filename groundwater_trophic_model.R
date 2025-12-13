@@ -53,6 +53,9 @@ source(urlfiletext)
 urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/error_measures.R"
 source(urlfiletext)
 
+urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/gtm.r"
+source(urlfiletext)
+
 ##########
 #parameters
 ##########
@@ -137,13 +140,15 @@ MO_het_1978_1981_mean_per_group_and_date <- chem_ordered_per_date_1978_1981 %>%
   dplyr::mutate(ID = paste(Date, kmeans4gr, sep = "_"))%>%
   dplyr::mutate(x = MO_het_mol_COD_L)
 
+
 #fauna
 fauna_deep_PerSamplPerTaxonWide_bm_sum$group <- fauna_deep_PerSamplPerTaxonWide_bm_sum$kmeans4gr
 fauna_deep_PerSamplPerTaxonWide_bm_sum$group_letter <- ifelse(fauna_deep_PerSamplPerTaxonWide_bm_sum$group ==  2, "P", ifelse(fauna_deep_PerSamplPerTaxonWide_bm_sum$group == 3, "R" , ifelse (fauna_deep_PerSamplPerTaxonWide_bm_sum$group == 4, "A", ifelse (fauna_deep_PerSamplPerTaxonWide_bm_sum$group == 1, "M", NA))))
 fauna_deep_PerSamplPerTaxonWide_bm_sum$group_letter <- factor(fauna_deep_PerSamplPerTaxonWide_bm_sum$group_letter , levels = c("R", "M", "P", "A"))
 
+#for visualization - explained in text and caption of the respective figures
 fauna_deep_PerSamplPerTaxonWide_bm_sum_no_high_biomass  <- fauna_deep_PerSamplPerTaxonWide_bm_sum %>%
-  dplyr::filter(bm_mol_COD_perL < 0.00001) #for visualization - explained in text and caption
+  dplyr::filter(bm_mol_COD_perL < 0.00001) 
 maxfaunaplot <-max(fauna_deep_PerSamplPerTaxonWide_bm_sum_no_high_biomass$bm_mol_COD_perL)
 
 
@@ -283,6 +288,7 @@ uniquedatevector <- unique(results$dateRi)
 uniquegroupvector <- unique(results$group)
 uniquegrouplettervector <- unique(results$group_letter)
 
+results_ <- results
 
 #the following for loop is largely consistent with v. 1 . In v. 2 the for loop here can be replaced by a call to the function gtm, see below the loop 
 for (g in 1:length(unique(results$group))){
@@ -290,27 +296,35 @@ for (g in 1:length(unique(results$group))){
   CC_group_fauna_g <- CC_table_fauna$CC[CC_table_fauna$group == uniquegroupvector[g]]
   group_letter_g <- unique(results$group_letter[results$group == uniquegroupvector[g]])
   
-  Fulda_daily_temp_joh_long_g <- Fulda_daily_temp_joh_long %>%
+  results_g <- results %>%
     dplyr::filter(group_letter == group_letter_g)
-  
-  for (i in 2:(length(uniquedatevector))) {
     
+    for (i in 2:(length(uniquedatevector))) {
+      
     #groundwater temp.
-    GWTEMP_ti <- Fulda_daily_temp_joh_long_g$gw_temp [Fulda_daily_temp_joh_long_g$dateRi == results$dateRi[i]]
+    GWTEMP_ti <- results_g$gw_temp [results_g$dateRi == results$dateRi[i]]
     
     RECHARGE_COD_mol_per_m3_per_day_df_ti <- RECHARGE_COD_mol_per_m3_per_day_df$RECHARGE_COD_mol_per_m3_per_day [RECHARGE_COD_mol_per_m3_per_day_df$dateRi == uniquedatevector[i]]
     
     RECHARGE_COD_mol_per_L_per_day_df_ti <- RECHARGE_COD_mol_per_m3_per_day_df_ti /1000
     
     #take the respective field of the  Date == Date[i] aund group == group[g] 
-    DETRITUS_ti_minus_1 <- results$DETRITUS[results$dateRi == uniquedatevector[i-1] & results$group == uniquegroupvector[g]]     
-    BOC_ti_minus_1 <- results$BOC[results$dateRi == uniquedatevector[i-1] & results$group == uniquegroupvector[g]]
+    #DETRITUS_ti_minus_1 <- results$DETRITUS[results$dateRi == uniquedatevector[i-1] & results$group == uniquegroupvector[g]]     
+    #BOC_ti_minus_1 <- results$BOC[results$dateRi == uniquedatevector[i-1] & results$group == uniquegroupvector[g]]
+    #MO_het_ti_minus_1 <- results$MO_het[results$dateRi == uniquedatevector[i-1] & results$group == uniquegroupvector[g]] 
+    #Fauna_ti_minus_1 <- results$fauna[results$dateRi == uniquedatevector[i-1] & results$group == uniquegroupvector[g]] 
+    #DETRITUS_ti_minus_1 <- results$DETRITUS[results$dateRi == uniquedatevector[i-1] & results$group == uniquegroupvector[g]]     
     
-    MO_het_ti_minus_1 <- results$MO_het[results$dateRi == uniquedatevector[i-1] & results$group == uniquegroupvector[g]] 
+    BOC_ti_minus_1 <- results_g$BOC[results_g$dateRi == uniquedatevector[i-1]]
     
-    Fauna_ti_minus_1 <- results$fauna[results$dateRi == uniquedatevector[i-1] & results$group == uniquegroupvector[g]] 
+    MO_het_ti_minus_1 <- results_g$MO_het[results_g$dateRi == uniquedatevector[i-1]]
     
+    Fauna_ti_minus_1 <- results_g$fauna[results_g$dateRi == uniquedatevector[i-1]]
+    
+    DETRITUS_ti_minus_1 <- results_g$DETRITUS[results_g$dateRi == uniquedatevector[i-1]]     
+
     BOC_import_from_detritus_ti <- dBOC_from_detritus_dt(k1, DETRITUS_ti_minus_1) #mol COD / L
+    
     
     if (scenario_with_1_or_without_0_fauna == 1) {
       
@@ -318,7 +332,8 @@ for (g in 1:length(unique(results$group))){
       
       Mortality <- dMortality_dt(mortalityRate, mortalityFraction_per_degree, Fauna_ti_minus_1, GWTEMP_ti  ) 
       
-      f_S_fauna <- dMO_fauna_degradation_factor_dt(MO_het_ti_minus_1,   rFauna_MO_uptake_per_day_at_TEMP , K_MO_at_temp, Fauna_ti_minus_1, delta_t, growth_model_fauna_type, CC_group_fauna_g)
+       #f_S_fauna is calculated within dMO_fauna_uptake_dt in the after next line, however, is also needed for calculating MO_het - thus, not redundant here
+       f_S_fauna <- dMO_fauna_degradation_factor_dt(MO_het_ti_minus_1,   rFauna_MO_uptake_per_day_at_TEMP , K_MO_at_temp, Fauna_ti_minus_1, delta_t, growth_model_fauna_type, CC_group_fauna_g)
       
       Fauna_ti_list <- dMO_fauna_uptake_dt(MO_het_ti_minus_1,   rFauna_MO_uptake_per_day_at_TEMP , K_MO_at_temp, Fauna_ti_minus_1, delta_t, growth_model_fauna_type, CC_group_fauna_g, yield_MO, Excretion , Mortality)
       
@@ -349,29 +364,37 @@ for (g in 1:length(unique(results$group))){
     BOC_ti_interim <- dBOC_stock_dt(BOC_ti_minus_1,  f_S_MO, BOC_import_from_detritus_ti, Excretion) 
     BOC_ti            <- max(0, BOC_ti_interim)      # to avoid errors when COD = BOC becomes slightly negative.. From Soetaert (2008)
     
-    #since this happens in this time step, the new Detritus is not used for further reactions in this time step - the detritus from the time step before is used
+    #since this happens in this time step, the new Detritus is not used for further reactions in this time step - the detritus from the time step before is used, because that is what the organisms perceive
     DETRITUS_ti <- dDETRITUS_dt( k1, DETRITUS_ti_minus_1, RECHARGE_COD_mol_per_L_per_day_df_ti, Mortality ) 
     
-    results$MO_het[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- MO_het_ti
+    #results$MO_het[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- MO_het_ti
+    #results$fauna[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- Fauna_ti
+    #results$BOC[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- BOC_ti
+    #results$growthrate[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- rMO_BOC_uptake_per_day_at_TEMP
+    #results$DETRITUS[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- DETRITUS_ti 
+    #results$import_from_detritus[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- BOC_import_from_detritus_ti 
     
-    results$fauna[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- Fauna_ti
+    results_g$MO_het[results_g$dateRi == uniquedatevector[i] ] <- MO_het_ti
     
-    results$BOC[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- BOC_ti
+    results_g$fauna[results_g$dateRi == uniquedatevector[i]] <- Fauna_ti
     
-    results$growthrate[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- rMO_BOC_uptake_per_day_at_TEMP
+    results_g$BOC[results_g$dateRi == uniquedatevector[i]] <- BOC_ti
     
-    results$DETRITUS[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- DETRITUS_ti 
+    #results_g$growthrate[results_g$dateRi == uniquedatevector[i] ] <- rMO_BOC_uptake_per_day_at_TEMP
     
-    results$import_from_detritus[results$dateRi == uniquedatevector[i] & results$group == uniquegroupvector[g]] <- BOC_import_from_detritus_ti 
+    results_g$DETRITUS[results_g$dateRi == uniquedatevector[i] ] <- DETRITUS_ti 
+    
+    results_g$import_from_detritus[results_g$dateRi == uniquedatevector[i] ] <- BOC_import_from_detritus_ti 
     
   } #end groups
+  results_ <- rbind(results_, results_g)
 }#end time
 
 #this for loop can be replaced by a call to the function gtm() implemented in v. 2.0.0 of the github code
-results <- gtm()
+results_ <- gtm()
 
 #ggplot requires the data to be in data frame
-results_df <- as.data.frame(results)
+results_df <- as.data.frame(results_)
 
 #saving this run's data for later use
 setwd(gw_FuldaEcosystemServices_results_txt_path) 
@@ -615,10 +638,11 @@ my.formula <- y ~ x
 ) 
 
 
-max_MO_het_for_plot <- max(chem_ordered_per_date_1978_1981$total_Prok_mol_COD_L, results_df$MO_het, na.rm =TRUE)
 
 #combine measured data with modelled data to calculate model accuracy - for that, join model results to the average per group and date of measured values for microbial numbers
 MO_het_1978_1981_mean_per_group_and_date_joined <- left_join(MO_het_1978_1981_mean_per_group_and_date, results_df, by =  c("Date" = "dateRi", "kmeans4gr" = "group"))
+
+max_MO_het_for_plot <- max(chem_ordered_per_date_1978_1981$total_Prok_mol_COD_L, results_df$MO_het, na.rm =TRUE)
 
 error_measures_data_MO_het_groups <- error_measures_data_table
 for (i in 1: length(unique(MO_het_1978_1981_mean_per_group_and_date_joined$kmeans4gr))) {
@@ -889,15 +913,11 @@ results_df_6$run <- 6
 #the combined plots in the following require the first 6 (or 8) scenarios to have been read in with the outcommented block above
 results_df__for_overview_all <- rbind(results_df_1, results_df_2, results_df_3, results_df_4, results_df_5, results_df_6)
 
-
 setwd(gw_FuldaEcosystemServices_results_txt_path)
-
 write.table(results_df__for_overview_all, "results_df__for_overview_all_for_barplot_1_2_3_4_5_6__.txt", row.names = FALSE)
 
 results_df__for_overview_all$dateRi <- as.Date(results_df__for_overview_all$dateRi)
-
 results_df__for_overview_all$group_letter <- factor(results_df__for_overview_all$group_letter , levels = c("R", "M", "P", "A"))
-
 
 results_df__for_overview_all_long <- results_df__for_overview_all %>%
   dplyr::group_by(dateRi, group_letter, run) %>%
@@ -947,8 +967,6 @@ for(i in c(1:length(unique(results_df__for_overview_all_long$run)))){
   }
 }
 
-names(lm_i_list) <- sub("diff_over_observation_period.1342", "fitted_diff_over_observation_period", names(lm_i_list) )
-names(lm_i_list) <- sub("fitted_fitted_diff_over_observation_period", "fitted_diff_over_observation_period", names(lm_i_list) )
 names(lm_i_list) <- sub("fitted_conc_t_0.1", "fitted_conc_t_0", names(lm_i_list) )
 names(lm_i_list) <- sub("fitted_conc_t_max.1342", "fitted_conc_t_max", names(lm_i_list) )
 
@@ -958,9 +976,9 @@ lm_i_list_ <- lm_i_list %>%
   dplyr::select(c("run", "group_letter", "variable", "coefficient_intercept", "coefficient_slope",  "F_value", "p_val", "fitted_diff_over_observation_period", "conc_t_0", "conc_t_max", "fitted_conc_t_0", "fitted_conc_t_max", "group_letter", "max_"))
 
 setwd(gw_FuldaEcosystemServices_results_txt_path)
-write.table(lm_i_list_, "results_df__lm_1_2_3_4_5_6__fp.txt", row.names = FALSE)
+write.table(lm_i_list_, "results_df__lm_1_2_3_4_5_6.txt", row.names = FALSE)
 #reading in an already existing file with results
-# lm_i_list<- read.table( "results_df__lm_1_2_3_4_5_6__fp.txt", header = TRUE)
+# lm_i_list<- read.table( "results_df__lm_1_2_3_4_5_6.txt", header = TRUE)
 
 #colors chosen according to https://stackoverflow.com/questions/57153428/r-plot-color-combinations-that-are-colorblind-accessible
 results_df__for_overview_all$colour_for_plot <- ifelse(results_df__for_overview_all$run == 1, "#009E73",ifelse(results_df__for_overview_all$run == 3, "#0072B2", ifelse(results_df__for_overview_all$run == 5, "#56B4E9", ifelse(results_df__for_overview_all$run == 2, "#F0E442", ifelse(results_df__for_overview_all$run == 4, "#E69F00", ifelse(results_df__for_overview_all$run == 6, "#D55E00", "black"))))))
@@ -979,6 +997,8 @@ results_df__for_overview_all$linewidth <- factor(results_df__for_overview_all$li
 override.col <- c( "#009E73", "#F0E442", "#0072B2", "#E69F00", "#56B4E9", "#D55E00")
 override.line <- c(1, 5, 2, 6, 3, 4)
 override.linewidth <- c(1.2, 1.1, .82, .81,  .41,  .4)
+
+my.formula <- y ~ x
 
 (plot_trends_BOC <- ggplot(data = results_df__for_overview_all)+
     geom_smooth(method = "lm",
