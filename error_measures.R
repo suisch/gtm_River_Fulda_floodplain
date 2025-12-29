@@ -103,7 +103,7 @@ error_measures <- function(data_regr, x, y) {
   
   
   return(data.frame(
-    run = run, group = NA, variable = NA,
+    scenario = scenario, group = NA, variable = NA,
     R2 = R2, 
     MAE = MAE, RMSE = RMSE,  MB = MB, NSE = NSE, N = N))
   
