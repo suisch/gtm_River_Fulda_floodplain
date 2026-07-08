@@ -1,3 +1,6 @@
+now redundant - use River_Fulda_floodplain_parameters.R instead
+
+
 # function which returns ca. 30 variables 
 parameter_variables<- function(run){
 
