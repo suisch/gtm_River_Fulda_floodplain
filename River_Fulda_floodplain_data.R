@@ -33,7 +33,7 @@ fulda_variables <- function(run, factor_CC_MO, factor_CC_fauna){
   Fulda_daily_prec <- read.table(urlfiletext, sep = ";", header = TRUE)
   
   Fulda_daily_prec <- Fulda_daily_prec %>%
-    dplyr::filter(RS > -999)#exclude obivous place holders
+    dplyr::filter(RS > -999)#exclude obvious place holders
   # according to BESCHREIBUNG_test_obsgermany_climate_daily_more_precip_historical_de.pdf, RS is the "tägliche Niederschlagshöhe mm ", i.e. daily precipitation in mm
   Fulda_daily_prec$dateRi  <- as.Date(as.character(Fulda_daily_prec$MESS_DATUM), format = c("%Y%m%d") )
   
@@ -91,7 +91,7 @@ fulda_variables <- function(run, factor_CC_MO, factor_CC_fauna){
   chem_ordered_per_date_1978_1981$OS_mol_COD_L <- chem_ordered_per_date_1978_1981$OS_mol_L *  7.5 #
   
   chem_ordered_per_date_1978_1981$COD_mol_L <- chem_ordered_per_date_1978_1981$COD / 32 / 1000 #calculating mg O2 into mol using molar mass of O2, because of chemical oxygen demand: 32 g / mol
-  #in the Marxen 2021 paper, this was called COD, in contrast to OS which is a different method but likely encompasses more than just COD. Here, we boldly assume that COD is BOD, i.e. biologically osidizaable carbon (BOD). The code was slightly misleading, therefore we relabel:
+  #in the Marxen 2021 paper, this was called COD, in contrast to OS which is a different method but likely encompasses more than just COD. Here, we boldly assume that COD is BOD, i.e. biologically oxidizaable carbon (BOD). The code was slightly misleading, therefore we relabel:
   names(chem_ordered_per_date_1978_1981) <-  sub("COD_mol_L", "BOC_mol_COD_L" , names(chem_ordered_per_date_1978_1981))
   
   chem_ordered_per_date_1978_1981$kmeans4gr <- kmeans_chem4_exchgroups$V2[match(chem_ordered_per_date_1978_1981$P, kmeans_chem4_exchgroups$V1)]
@@ -186,7 +186,7 @@ fulda_variables <- function(run, factor_CC_MO, factor_CC_fauna){
       dplyr::group_by(Date) %>%
       dplyr::reframe(total_Prok_mol_COD_L = mean(total_Prok_mol_COD_L, na.rm = TRUE))
     
-    #for the start value of microbes in group 1, take the first average available in time 
+    #for the start value of microbes in group 1, take the first average (across all groups?) available in time 
     MO_het_gr1_t0 <- MO_het_gr1_t0_all$total_Prok_mol_COD_L[1]
     
     #carrying capacity assumed is the max MO_het abundance measured time a factor which is defined in the parameter xlsx file
@@ -351,7 +351,8 @@ fulda_variables <- function(run, factor_CC_MO, factor_CC_fauna){
     
     MO_het_gr4_t0 <- MO_het_gr4_t0_all$total_Prok_mol_COD_L[1]
     
-    MO_het_CC_gr4 <- chem_ordered_per_date_1978_1981_per_group_max$total_Prok_mol_COD_L_max[chem_ordered_per_date_1978_1981_per_group_max$kmeans4gr ==4] *factor_CC_MO
+   #carrying capacity assumed is the max MO_het abundance measured  times a factor declared in the parameters.xlsx
+     MO_het_CC_gr4 <- chem_ordered_per_date_1978_1981_per_group_max$total_Prok_mol_COD_L_max[chem_ordered_per_date_1978_1981_per_group_max$kmeans4gr ==4] *factor_CC_MO
   }else{
     MO_het_gr4_t0 <- 0
     MO_het_CC_gr4 <- 0
