@@ -7,6 +7,9 @@ library(patchwork) #for sticking together different plots
 library(ggpubr)#ggarrange. 
 library(cowplot)
 library(colorspace)
+#from https://stackoverflow.com/questions/67219891/create-additional-independent-legends-in-ggplot2
+library(ggnewscale) #new_scale_colour
+
 
 #install package for color blind-safe plots
 # install.packages("ggokabeito")
@@ -18,12 +21,12 @@ library(ggplot2)
 library(ggtext)#for exponents in ylab in ggplot
 
 
-rm(list = ls()) #remove any variables and data created before, to make sure that this runs with fresh data
+rm(list = ls()) #remove any variables and data created before, to make sure that this scenarios with fresh data
 
 ##########
-#the runs with the different parameters are listed in the excel file "parameters.xlsx"; 1 to 8. Change accordingly
+#the scenarios with the different parameters are listed in the excel file "parameters.xlsx"; 1 to 8. Change accordingly
 ##########
-run <- 1
+scenario <- 9
 
 # define these paths for saving your result text files locally
 #gw_FuldaEcosystemServices_plots_path <-""
@@ -50,9 +53,11 @@ source(urlfiletext)
 urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/River_Fulda_floodplain_prec_plot.R"
 source(urlfiletext)
 
+#get function "error_measures" from git
 urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/error_measures.R"
 source(urlfiletext)
 
+#get function "gtm" from git
 urlfiletext <- "https://raw.github.com/suisch/gtm_River_Fulda_floodplain/main/gtm.r"
 source(urlfiletext)
 
@@ -69,15 +74,15 @@ parameters <- read.xlsx(urlfiletext, startRow = 3, sheet = 1)
 #reading in Fulda data from file
 ##########
 
-scenario_with_1_or_without_0_MO <-  parameters$scenario_with_1_or_without_0_MO[run]  
-scenario_with_1_or_without_0_fauna <- parameters$scenario_with_1_or_without_0_fauna[run]  
+scenario_with_1_or_without_0_MO <-  parameters$scenario_with_1_or_without_0_MO[scenario]  
+scenario_with_1_or_without_0_fauna <- parameters$scenario_with_1_or_without_0_fauna[scenario]  
 
-factor_CC_MO <-  parameters$factor_CC_MO[run]
-factor_CC_fauna <-  parameters$factor_CC_fauna[run]
+factor_CC_MO <-  parameters$factor_CC_MO[scenario]
+factor_CC_fauna <-  parameters$factor_CC_fauna[scenario]
 
 #this depends on the two scenario variables scenario_with_1_or_without_0_MO and scenario_with_1_or_without_0_fauna
-fulda_variables_read_in <- fulda_variables(run, factor_CC_MO, factor_CC_fauna)
-names(fulda_variables_read_in) <- c("Fulda_daily_prec", "Fulda_daily_temp_", "chem_ordered_per_date_1978_1981", "chem_ordered_per_date_1978_1981_mean_per_group", "fauna_deep_PerSamplPerTaxonWide_bm_sum", "fauna_deep_PerSamplPerTaxon_bm_mean_per_group", "t_0", "t_max", "DETRITUS_gr1_t0", "DETRITUS_gr2_t0", "DETRITUS_gr3_t0", "DETRITUS_gr4_t0", "BOC_gr1_t0", "BOC_gr2_t0", "BOC_gr3_t0", "BOC_gr4_t0", "MO_het_gr1_t0", "MO_het_gr2_t0", "MO_het_gr3_t0", "MO_het_gr4_t0", "fauna_gr1_t0", "fauna_gr2_t0", "fauna_gr3_t0", "fauna_gr4_t0",  "CC_table_MO", "CC_table_fauna", "Fulda_daily_temp_joh_long") 
+fulda_variables_read_in <- fulda_variables(scenario, factor_CC_MO, factor_CC_fauna)
+names(fulda_variables_read_in) <- c("Fulda_daily_prec", "Fulda_daily_temp", "chem_ordered_per_date_1978_1981", "chem_ordered_per_date_1978_1981_mean_per_group", "fauna_deep_PerSamplPerTaxonWide_bm_sum", "fauna_deep_PerSamplPerTaxon_bm_mean_per_group", "t_0", "t_max", "DETRITUS_gr1_t0", "DETRITUS_gr2_t0", "DETRITUS_gr3_t0", "DETRITUS_gr4_t0", "BOC_gr1_t0", "BOC_gr2_t0", "BOC_gr3_t0", "BOC_gr4_t0", "MO_het_gr1_t0", "MO_het_gr2_t0", "MO_het_gr3_t0", "MO_het_gr4_t0", "fauna_gr1_t0", "fauna_gr2_t0", "fauna_gr3_t0", "fauna_gr4_t0",  "CC_table_MO", "CC_table_fauna", "Fulda_daily_temp_joh_long") 
 
 list2env(fulda_variables_read_in, globalenv())
 
@@ -89,8 +94,9 @@ chem_ordered_per_date_1978_1981$group_letter <- factor(chem_ordered_per_date_197
 #read parameters  from file. requires Fulda_daily_prec and thus, needs to be run after the data are read in
 
 #read parameters variables  from file
-parameters_read_in <- read_parameters(run)
+parameters_read_in <- read_parameters(scenario)
 names(parameters_read_in) <- c("delta_t", "max_t", "aquifer_depth", "import_MO_het", "scenario_with_1_or_without_0_fauna", "scenario_with_1_or_without_0_MO", "mortalityRate", "import_fauna", "yield_ac", "yield_MO", "K_MO_at_temp", "rMO_BOC_uptake_per_day_at_lab_temperature", "rFauna_MO_uptake_per_day_at_TEMP", "k1", "excretionRate",  "RECHARGE_COD_mol_per_m3_per_day_df", "lab_temp", "K_ac", "growth_model_MO_type", "growth_model_fauna_type", "mortalityFraction_per_degree", "microbe_loss_factor_when_no_fauna") 
+
 #based on the data read in above and the parameters read in here, some further variables are derived within this function: e.g. "RECHARGE_COD_mol_per_m3_per_day_df"
 
 list2env(parameters_read_in, globalenv())
@@ -105,7 +111,7 @@ if(is.na(max_t)){
 #creating temperature scenarios
 ##########
 
-temperature_scenario <- parameters$temperature_scenario[run]
+temperature_scenario <- parameters$temperature_scenario[scenario]
 
 Fulda_daily_temp_joh_long$dateRi <- as.Date(Fulda_daily_temp_joh_long$dateRi)
 #not used at this instance:
@@ -140,7 +146,6 @@ MO_het_1978_1981_mean_per_group_and_date <- chem_ordered_per_date_1978_1981 %>%
   dplyr::mutate(ID = paste(Date, kmeans4gr, sep = "_"))%>%
   dplyr::mutate(x = MO_het_mol_COD_L)
 
-
 #fauna
 fauna_deep_PerSamplPerTaxonWide_bm_sum$group <- fauna_deep_PerSamplPerTaxonWide_bm_sum$kmeans4gr
 fauna_deep_PerSamplPerTaxonWide_bm_sum$group_letter <- ifelse(fauna_deep_PerSamplPerTaxonWide_bm_sum$group ==  2, "P", ifelse(fauna_deep_PerSamplPerTaxonWide_bm_sum$group == 3, "R" , ifelse (fauna_deep_PerSamplPerTaxonWide_bm_sum$group == 4, "A", ifelse (fauna_deep_PerSamplPerTaxonWide_bm_sum$group == 1, "M", NA))))
@@ -148,9 +153,8 @@ fauna_deep_PerSamplPerTaxonWide_bm_sum$group_letter <- factor(fauna_deep_PerSamp
 
 #for visualization - explained in text and caption of the respective figures
 fauna_deep_PerSamplPerTaxonWide_bm_sum_no_high_biomass  <- fauna_deep_PerSamplPerTaxonWide_bm_sum %>%
-  dplyr::filter(bm_mol_COD_perL < 0.00001) 
+  dplyr::filter(bm_mol_COD_perL < 0.00015) 
 maxfaunaplot <-max(fauna_deep_PerSamplPerTaxonWide_bm_sum_no_high_biomass$bm_mol_COD_perL)
-
 
 fauna_deep_PerSamplPerTaxonWide_bm_sum_for_plot <- fauna_deep_PerSamplPerTaxonWide_bm_sum %>%
   dplyr::filter(!is.na(bm_mol_COD_perL))%>%
@@ -167,7 +171,7 @@ fauna_mean_per_group_and_date <- fauna_deep_PerSamplPerTaxonWide_bm_sum %>%
 #container for results of the error measures derivation
 ##########
 
-error_measures_data_table <- data.frame(run = NA, group = NA, variable = NA, R2 = NA, MAE = NA, RMSE = NA, MB = NA, NSE = NA, N = NA)
+error_measures_data_table <- data.frame(scenario = NA, group = NA, variable = NA, R2 = NA, MAE = NA, RMSE = NA, MB = NA, NSE = NA, N = NA)
 
 ##########
 #reading in Fulda precitiation plot - does not depend on model variables, but depends on Fulda_daily_prec in fulda_variables_read_in, and thus, cannot be read in earlier than this
@@ -288,7 +292,7 @@ uniquedatevector <- unique(results$dateRi)
 uniquegroupvector <- unique(results$group)
 uniquegrouplettervector <- unique(results$group_letter)
 
-results_ <- results
+results_ <- results[1,] #make a copy of this container' header that the model results get written into
 
 #the following for loop is largely consistent with v. 1 . In v. 2 the for loop here can be replaced by a call to the function gtm, see below the loop 
 for (g in 1:length(unique(results$group))){
@@ -390,24 +394,28 @@ for (g in 1:length(unique(results$group))){
   results_ <- rbind(results_, results_g)
 }#end time
 
+
+
+
 #this for loop can be replaced by a call to the function gtm() implemented in v. 2.0.0 of the github code
-results_ <- gtm()
+#results_ <- gtm()
 
 #ggplot requires the data to be in data frame
 results_df <- as.data.frame(results_)
 
-#saving this run's data for later use
+#saving this scenario's data for later use
 setwd(gw_FuldaEcosystemServices_results_txt_path) 
-write.table(results_df, paste0("results_df_run_",run,".txt"), row.names = FALSE)
+write.table(results_df, paste0("results_df_scenario_",scenario,".txt"), row.names = FALSE)
 
 #for plotting several variables, make long form of the results data frame
 results_df_long <- results_df %>%
   tidyr::pivot_longer(cols = c(BOC, DETRITUS, MO_het, fauna), names_to = "variable") 
 
-write.table(results_df, paste0("results_df_long_run_",run,".txt"), row.names = FALSE)
+write.table(results_df, paste0("results_df_long_scenario_",scenario,".txt"), row.names = FALSE)
 
 
 unified_axes <- 1 # 1 = make the same axis for all four subplots , representing the four groups . 0 = axes reflect the groups' minima and maxima
+unified_axes_fauna <- 1
 
 
 #combine measured data with modelled data to calculate model accuracy - for that, join model results to measured values
@@ -440,6 +448,11 @@ geomtexttable_DETRITUS$group_letter <- factor(geomtexttable_DETRITUS$group_lette
 
 results_df$group_letter <- factor(results_df$group_letter, levels = c("R", "M", "P", "A"))
 
+
+
+
+#  preparing statistics for plotting the results
+
 geomtexttable_DETRITUS$x <- as.Date(geomtexttable_DETRITUS$x)
 geomtexttable_DETRITUS$y <- as.numeric(geomtexttable_DETRITUS$y)
 geomtexttable_DETRITUS$y_R2 <- geomtexttable_DETRITUS$y-max(DETR_1978_1981_mean_per_group_and_date_joined$OS_mol_COD_L, DETR_1978_1981_mean_per_group_and_date_joined$DETRITUS, na.rm = TRUE)*.05
@@ -455,11 +468,7 @@ geomtexttable_DETRITUS$NSE <- paste("NSE =", geomtexttable_DETRITUS$NSE)
 geomtexttable_DETRITUS$MB <- paste("MB =", geomtexttable_DETRITUS$MB)
 geomtexttable_DETRITUS$N <- paste("N =", geomtexttable_DETRITUS$N)
 
-# ylablist <- list( bquote( paste( "Detritus") ) ,
-#                bquote( paste( "[mol COD  ", L^{-1}, " ]" ) ) ,
-#                bquote(paste("measured [o] and")),
-#                bquote("modelled [.]")
-#                )
+
 
 Fulda_Detritus_partOrganics_plot <- chem_ordered_per_date_1978_1981 %>%
   dplyr::filter(!is.na(OS_mol_COD_L))%>%
@@ -470,14 +479,6 @@ Fulda_Detritus_partOrganics_plot <- chem_ordered_per_date_1978_1981 %>%
   )+
   scale_x_date(limits = c(t_0, t_max) )+
   #labs(x = "Date", y = "Detritus\n [mol COD/ L]\n measured [o] and\nmodelled [.]")+ 
-  #cannot combine expression(paste and \n labs(x = "Date", y = expression(paste("Detritus\n [mol COD  ", L^{-1}, " ]\n measured [o] and\n modelled [.]")))+
-  #error labs(x = "Date", y = parse("Detritus\n [mol~COD~L^{-1}~]*\nmeasured~[*o*]~and\nmodelled~[*.*]"))+
-#\n in "" does not do anything and \n without "" produces error  labs(x = "Date", y = expression(Detritus*"\n"~"["*mol~COD~L^{"-1"}~"]"~\nmeasured~"["*o*"]"~and~modelled~"["*.*"]"))+
-  #works but each consecutive line becomes smaller because they need to fit into the same space  labs(x = "Date", y = expression(atop("Detritus",atop("[mol COD "*L^{-1}*"]",atop("measured [o] and"," modelled [.]")))))+
-  #only prints the first line  labs(x = "Date", y = do.call(expression, ylablist))+ #https://stackoverflow.com/questions/18237134/line-break-in-expression/18237295#18237295
-  #labs(x = "Date", y = "Detritus\n [mol COD  L<sup>-1</sup>]\n measured [o] and\n modelled [.]")+ # https://forum.posit.co/t/exponent-numbers-in-ggplot-labels/171969/2 library ggtext
-  #labs(x = "Date", y = "Detritus [mol COD  L<sup>-1</sup>] measured [o] and modelled [.]")+ # https://forum.posit.co/t/exponent-numbers-in-ggplot-labels/171969/2 library ggtext
-  #cannot deal with line breaks \n
   labs(x = "Date", y = "Detritus<br> [mol COD L<sup>-1</sup>]<br> measured [o] and <br>modelled [.]")+ # https://forum.posit.co/t/exponent-numbers-in-ggplot-labels/171969/2 library ggtext
   scale_fill_okabe_ito()+ 
   scale_color_okabe_ito()+
@@ -530,7 +531,7 @@ my.formula <- y ~ x
 
 
 #the maximum is calculated from the non-aggregated data to be able to see the individual points
-max_BOC <- max(chem_ordered_per_date_1978_1981$BOC_mol_COD_L, results$BOC, na.rm =TRUE)
+max_BOC <- max(chem_ordered_per_date_1978_1981$BOC_mol_COD_L, results_df$BOC, na.rm =TRUE)
 
 #combine measured data with modelled data to calculate model accuracy - for that, join model results to measured values
 #there is one model per group, thus, this will be compared with the mean per group
@@ -556,7 +557,9 @@ chem_ordered_per_date_1978_1981_mean_BOC_per_group_and_date_joined <- dplyr::lef
 
 
 #make a table with 4x the same coordinates x, y, and for the label: the column BOC
-geomtexttable_BOC <- as.data.frame(cbind("group" = error_measures_data_BOC_groups$group, "x" = rep("1980-04-01",4), "y" = rep(max_BOC*.95, 4),
+geomtexttable_BOC <- as.data.frame(cbind("group" = error_measures_data_BOC_groups$group, 
+"x" = rep("1980-04-01",4), 
+"y" = rep(max_BOC*.95, 4),
                                          "R2" = error_measures_data_BOC_groups$R2 ,
                                          "MAE" = error_measures_data_BOC_groups$MAE ,
                                          "RMSE" = error_measures_data_BOC_groups$RMSE ,
@@ -836,7 +839,8 @@ Fulda_fauna_plot <-fauna_deep_PerSamplPerTaxonWide_bm_sum_for_plot %>%
                                               orientation = 'left-rotated')# necessary for the ylab with library ggtext
   )
 
-if (unified_axes == 1) {
+
+if (unified_axes_fauna == 1) {
   (Fulda_fauna_plot <- Fulda_fauna_plot+
      facet_grid(.~group_letter   
      )
@@ -856,6 +860,8 @@ if (unified_axes == 1) {
                 se=TRUE,  formula = my.formula, lwd = 0.3) 
 ) 
 
+
+
 Fulda_prec_plotted +  Fulda_Detritus_partOrganics_plot  + Fulda_BOC_plot + Fulda_MO_plot + Fulda_fauna_plot + plot_layout(ncol = 1) +
   plot_annotation(tag_levels = "a", tag_suffix = ")")
 
@@ -863,12 +869,12 @@ Fulda_prec_plotted +  Fulda_Detritus_partOrganics_plot  + Fulda_BOC_plot + Fulda
 setwd(gw_FuldaEcosystemServices_plots_path)
 if (unified_axes == 1) {
   #save as png AND as pdf - for some journals, pdf are preferred, for others, png
-  ggsave(paste0("model_measured_run_",run,"_with_MO_one_y_scale_w_model_qual.png"), width = 10, height = 9)
-  ggsave(paste0("model_measured_run_",run,"_with_MO_one_y_scale_w_model_qual.pdf"), width = 10, height = 9)
+  ggsave(paste0("model_measured_scenario_",scenario,"_one_y_scale_w_model_qual.png"), width = 10, height = 9)
+  ggsave(paste0("model_measured_scenario_",scenario,"_one_y_scale_w_model_qual.pdf"), width = 10, height = 9)
 }else{
   #save as png AND as pdf
-  ggsave(paste0("model_measured_run_",run,"_with_MO_free_y_scale_w_model_qual.png"), width = 10, height = 9)
-  ggsave(paste0("model_measured_run_",run,"_with_MO_free_y_scale_w_model_qual.pdf"), width = 10, height = 9)
+  ggsave(paste0("model_measured_scenario_",scenario,"_free_y_scale_w_model_qual.png"), width = 10, height = 9)
+  ggsave(paste0("model_measured_scenario_",scenario,"_free_y_scale_w_model_qual.pdf"), width = 10, height = 9)
 }
 
 
@@ -877,68 +883,97 @@ if (unified_axes == 1) {
 
 setwd(gw_FuldaEcosystemServices_plots_path)
 if (unified_axes == 1) {
-  ggsave(paste0("model_measured_trend_run_",run,"_with_MO_one_y_scale_w_model_qual.png"), width = 10, height = 9)
-  ggsave(paste0("model_measured_trend_run_",run,"_with_MO_one_y_scale_w_model_qual.pdf"), width = 10, height = 9)
+  ggsave(paste0("model_measured_trend_scenario_",scenario,"_one_y_scale_w_model_qual.png"), width = 10, height = 9)
+  ggsave(paste0("model_measured_trend_scenario_",scenario,"_one_y_scale_w_model_qual.pdf"), width = 10, height = 9)
 }else{
-  ggsave(paste0("model_measured_trend_run_",run,"_with_MO_free_y_scale_w_model_qual.png"), width = 10, height = 9)
-  ggsave(paste0("model_measured_trend_run_",run,"_with_MO_free_y_scale_w_model_qual.png"), width = 10, height = 9)
+  ggsave(paste0("model_measured_trend_scenario_",scenario,"_free_y_scale_w_model_qual.png"), width = 10, height = 9)
+  ggsave(paste0("model_measured_trend_scenario_",scenario,"_free_y_scale_w_model_qual.png"), width = 10, height = 9)
 }
 
 
-#this block is for read in data - outcomment this block for fresh data !
-#in order to produce plots which compare the runs, read the four run results from files saved previously
+# for the comparison of scenarios, read in files to combine them to one data set
 setwd(gw_FuldaEcosystemServices_results_txt_path)
 
-results_df_1 <- read.table( "results_df_run_1.txt", header = TRUE)
-results_df_2 <- read.table( "results_df_run_2.txt", header = TRUE)
-results_df_3 <- read.table( "results_df_run_3.txt", header = TRUE)
-results_df_4 <- read.table( "results_df_run_4.txt", header = TRUE)
-results_df_5 <- read.table( "results_df_run_5.txt", header = TRUE)
-results_df_6 <- read.table( "results_df_run_6.txt", header = TRUE)
+results_df_1 <- read.table( "results_df_scenario_1.txt", header = TRUE)
+results_df_2 <- read.table( "results_df_scenario_2.txt", header = TRUE)
+results_df_3 <- read.table( "results_df_scenario_3.txt", header = TRUE)
+results_df_4 <- read.table( "results_df_scenario_4.txt", header = TRUE)
+results_df_5 <- read.table( "results_df_scenario_5.txt", header = TRUE)
+results_df_6 <- read.table( "results_df_scenario_6.txt", header = TRUE)
+results_df_7 <- read.table( "results_df_scenario_7.txt", header = TRUE)
+results_df_8 <- read.table( "results_df_scenario_8.txt", header = TRUE)
+results_df_9 <- read.table( "results_df_scenario_9.txt", header = TRUE)
+results_df_10 <- read.table( "results_df_scenario_10.txt", header = TRUE)
+results_df_1$scenario <- 1
+results_df_2$scenario <- 2
+results_df_3$scenario <- 3
+results_df_4$scenario <- 4
+results_df_5$scenario <- 5
+results_df_6$scenario <- 6
+results_df_7$scenario <- 7
+results_df_8$scenario <- 8
+results_df_9$scenario <- 9
+results_df_10$scenario <- 10
 
-#if using one of the saved ones for producing the above figures, prepare the respective data, by replacing xx with the number of the run
-# results_df <- results_df_xx
+#this block is for using those data that were read-in using the lines above, as data for a one-scenario plot, the code for which follow directly below -
+# outcomment this block for fresh data !
+
+#if using one of the saved ones for producing the above figures, prepare the respective data, by replacing xx with the number of the scenario
+#results_df <- results_df_xx
 results_df$dateRi <- as.Date(results_df$dateRi)
 results_df$group_letter <- factor(results_df$group_letter , levels = c("R", "M", "P", "A"))
-run <- xx
-
-results_df_1$run <- 1
-results_df_2$run <- 2
-results_df_3$run <- 3
-results_df_4$run <- 4
-results_df_5$run <- 5
-results_df_6$run <- 6
+scenario <- xx #only relevant for plotting ONE scenario, not for combining scenarios
 #END block read in data - outcomment for fresh data !
 
-#the combined plots in the following require the first 6 (or 8) scenarios to have been read in with the outcommented block above
-results_df__for_overview_all <- rbind(results_df_1, results_df_2, results_df_3, results_df_4, results_df_5, results_df_6)
+
+
+# done only once
+#results_df__for_overview_all <- rbind(results_df_1, results_df_2, results_df_3, results_df_4, results_df_5, results_df_6, results_df_7, results_df_8, results_df_9, results_df_10)
+results_df__for_overview_all$dateRi <- as.Date(results_df__for_overview_all$dateRi)
+
+results_df__for_overview_all$group_letter <- factor(results_df__for_overview_all$group_letter , levels = c("R", "M", "P", "A"))
+
+#setwd(gw_FuldaEcosystemServices_results_txt_path)
 
 setwd(gw_FuldaEcosystemServices_results_txt_path)
-write.table(results_df__for_overview_all, "results_df__for_overview_all_for_barplot_1_2_3_4_5_6__.txt", row.names = FALSE)
+#do only once
+#write.table(results_df__for_overview_all, "results_df__for_overview_all__1_2_3_4_5_6_7_8_9_10.txt", row.names = FALSE)
+
+### END writing the complete set of scneario runs
+########
+
+
+########
+###  reading in the complete set of scenario runs, for calculating the linear model fits to the GTM model scenarios
+
+setwd(gw_FuldaEcosystemServices_results_txt_path)
+results_df__for_overview_all <- read.table("results_df__for_overview_all__1_2_3_4_5_6_7_8_9_10.txt", header = TRUE)
 
 results_df__for_overview_all$dateRi <- as.Date(results_df__for_overview_all$dateRi)
+
 results_df__for_overview_all$group_letter <- factor(results_df__for_overview_all$group_letter , levels = c("R", "M", "P", "A"))
 
 results_df__for_overview_all_long <- results_df__for_overview_all %>%
-  dplyr::group_by(dateRi, group_letter, run) %>%
+  dplyr::group_by(dateRi, group, group_letter, scenario) %>%
   tidyr::pivot_longer(cols = c(DETRITUS, BOC, MO_het, fauna), names_to = "variable", values_to = "value")
 
-#calculate trends 
+
+#calculate trends from the six main runs and the four extreme runs for the two most sensitive parameters
 lm_i_df <- lm_i_list <- NULL
 i <- j <- 1 
 
-for(i in c(1:length(unique(results_df__for_overview_all_long$run)))){
+for(i in c(1:length(unique(results_df__for_overview_all_long$scenario)))){
   
-  for(j in c(1:length(unique(results_df__for_overview_all_long$group_letter)))){
+  for(j in c(1:length(unique(results_df__for_overview_all_long$group)))){
     
     for(k in c(1:length(unique(results_df__for_overview_all_long$variable)))){
       
-      run_i <- unique(results_df__for_overview_all_long$run)[i]
-      group_letter_j <- unique(results_df__for_overview_all_long$group_letter)[j]
+      scenario_i <- unique(results_df__for_overview_all_long$scenario)[i]
+      group_j <- unique(results_df__for_overview_all_long$group)[j]
       variable_k <- unique(results_df__for_overview_all_long$variable)[k]
       
       results_df__for_overview_all_long_i <- results_df__for_overview_all_long %>%
-        dplyr::filter(run == run_i  & group_letter == group_letter_j &
+        dplyr::filter(scenario == scenario_i  & group == group_j &
                         variable == variable_k) 
       
       lm_i <- lm(results_df__for_overview_all_long_i$value ~  results_df__for_overview_all_long_i$dateRi) 
@@ -951,8 +986,8 @@ for(i in c(1:length(unique(results_df__for_overview_all_long$run)))){
         lm_i_df$F_value <- "NA"
       }
       lm_i_df$p_val <- anova(lm_i)$"Pr(>F)"[1]
-      lm_i_df$run <- run_i
-      lm_i_df$group_letter <- group_letter_j
+      lm_i_df$scenario <- scenario_i
+      lm_i_df$group <- unique(results_df__for_overview_all_long_i$group)
       lm_i_df$variable <- variable_k
       
       lm_i_df$max_ <- max(results_df__for_overview_all_long_i$value, na.rm = TRUE)
@@ -960,55 +995,77 @@ for(i in c(1:length(unique(results_df__for_overview_all_long$run)))){
       lm_i_df$conc_t_max <- results_df__for_overview_all_long_i$value[length(results_df__for_overview_all_long_i$value)]
       lm_i_df$fitted_conc_t_0 <- lm_i$fitted.values[1]
       lm_i_df$fitted_conc_t_max <- lm_i$fitted.values[length(lm_i$fitted.values)]
+      lm_i_df$diff_over_observation_period <- lm_i_df$conc_t_max - lm_i_df$conc_t_0
       lm_i_df$fitted_diff_over_observation_period <- lm_i$fitted.values[length(lm_i$fitted.values)]-lm_i$fitted.values[1]
-      lm_i_df$slope_per_year <- lm_i_df$diff_over_observation_period/lm_i_df$time_span
-      lm_i_list <- rbind(lm_i_list, as.data.frame(t(unlist(lm_i_df)))) 
+      #lm_i_df$slope_per_year <- lm_i_df$fitted_diff_over_observation_period/lm_i_df$time_span
+      lm_i_df_unlist <- unlist(lm_i_df) #here, the group letter becomes transformed into a number, for whatever reasons
+      names(lm_i_df_unlist) <- names(lm_i_df)
+      lm_i_list <- rbind(lm_i_list, as.data.frame(t(lm_i_df_unlist))) 
     }
   }
 }
 
-names(lm_i_list) <- sub("fitted_conc_t_0.1", "fitted_conc_t_0", names(lm_i_list) )
-names(lm_i_list) <- sub("fitted_conc_t_max.1342", "fitted_conc_t_max", names(lm_i_list) )
-
 lm_i_list_ <- lm_i_list %>%
-  dplyr::mutate(group = ifelse(group_letter==3,"R",ifelse(group_letter==2,"P",ifelse(group_letter==4,"A",ifelse(group_letter==1,"M","z"))))) %>%
-  #dplyr::select(c("run", "group", "variable", "coefficient_intercept", "coefficient_slope",  "F_value", "p_val", "fitted_diff_over_observation_period", "conc_t_0", "conc_t_max", "fitted_conc_t_0", "fitted_conc_t_max", "group_letter", "max_"))
-  dplyr::select(c("run", "group_letter", "variable", "coefficient_intercept", "coefficient_slope",  "F_value", "p_val", "fitted_diff_over_observation_period", "conc_t_0", "conc_t_max", "fitted_conc_t_0", "fitted_conc_t_max", "group_letter", "max_"))
+  dplyr::mutate(group_letter = ifelse(group==3,"R",ifelse(group==2,"P",ifelse(group==4,"A",ifelse(group==1,"M","z"))))) %>%
+  dplyr::select(c("scenario", "group_letter", "variable", "coefficient_intercept", "coefficient_slope",  "F_value", "p_val", "diff_over_observation_period", "fitted_diff_over_observation_period", "conc_t_0", "conc_t_max", "fitted_conc_t_0", "fitted_conc_t_max", "group", "max_"))
 
 setwd(gw_FuldaEcosystemServices_results_txt_path)
-write.table(lm_i_list_, "results_df__lm_1_2_3_4_5_6.txt", row.names = FALSE)
-#reading in an already existing file with results
-# lm_i_list<- read.table( "results_df__lm_1_2_3_4_5_6.txt", header = TRUE)
+write.table(lm_i_list_, "results_df__lm_1_2_3_4_5_6_7_8_9_10.txt", row.names = FALSE)
+
+#END  linear model fits to the GTM model scenarios
+
+
+#for plots of the lm trends of the first 6 scenarios
+#first make data set
+# for this: reading in the already existing file with all the GTM model scenarios, and delimit it to the wanted data  
+
+results_df__for_overview_all_1_to_6 <- read.table("results_df__for_overview_all__1_2_3_4_5_6_7_8_9_10.txt", header = TRUE) %>%
+dplyr::filter(scenario %in% c(1:6))
+
+results_df__for_overview_all_1_to_6$dateRi <- as.Date(results_df__for_overview_all_1_to_6$dateRi)
 
 #colors chosen according to https://stackoverflow.com/questions/57153428/r-plot-color-combinations-that-are-colorblind-accessible
-results_df__for_overview_all$colour_for_plot <- ifelse(results_df__for_overview_all$run == 1, "#009E73",ifelse(results_df__for_overview_all$run == 3, "#0072B2", ifelse(results_df__for_overview_all$run == 5, "#56B4E9", ifelse(results_df__for_overview_all$run == 2, "#F0E442", ifelse(results_df__for_overview_all$run == 4, "#E69F00", ifelse(results_df__for_overview_all$run == 6, "#D55E00", "black"))))))
 
-results_df__for_overview_all$colour_for_plot <- factor(results_df__for_overview_all$colour_for_plot, level = c("#009E73", "#F0E442", "#0072B2",   "#E69F00", "#56B4E9",   "#D55E00"))
+results_df__for_overview_all_1_to_6$colour_for_plot <- ifelse(results_df__for_overview_all_1_to_6$scenario == 1, "#009E73",ifelse(results_df__for_overview_all_1_to_6$scenario == 3, "#0072B2", ifelse(results_df__for_overview_all_1_to_6$scenario == 5, "#56B4E9", ifelse(results_df__for_overview_all_1_to_6$scenario == 2, "#F0E442", ifelse(results_df__for_overview_all_1_to_6$scenario == 4, "#E69F00", ifelse(results_df__for_overview_all_1_to_6$scenario == 6, "#D55E00", "black"))))))
 
-results_df__for_overview_all$line <- ifelse(results_df__for_overview_all$run == 1, 1,ifelse(results_df__for_overview_all$run == 3, 2, ifelse(results_df__for_overview_all$run == 5, 3,  ifelse(results_df__for_overview_all$run == 2, 5, ifelse(results_df__for_overview_all$run == 4, 6, ifelse(results_df__for_overview_all$run == 6, 4, 1))))))
+results_df__for_overview_all_1_to_6$colour_for_plot <- factor(results_df__for_overview_all_1_to_6$colour_for_plot, level = c("#009E73", "#F0E442", "#0072B2",   "#E69F00", "#56B4E9",   "#D55E00"))
 
-results_df__for_overview_all$line <- factor(results_df__for_overview_all$line, level = c(1, 5, 2,  6, 3,   4))
+results_df__for_overview_all_1_to_6$line <- ifelse(results_df__for_overview_all_1_to_6$scenario == 1, 1,ifelse(results_df__for_overview_all_1_to_6$scenario == 3, 2, ifelse(results_df__for_overview_all_1_to_6$scenario == 5, 3,  ifelse(results_df__for_overview_all_1_to_6$scenario == 2, 5, ifelse(results_df__for_overview_all_1_to_6$scenario == 4, 6, ifelse(results_df__for_overview_all_1_to_6$scenario == 6, 4, 1))))))
 
-results_df__for_overview_all$linewidth <- ifelse(results_df__for_overview_all$run == 1, 1.2,ifelse(results_df__for_overview_all$run == 3, .82, ifelse(results_df__for_overview_all$run == 5, .31, ifelse(results_df__for_overview_all$run == 2, 1.1, ifelse(results_df__for_overview_all$run == 4, .81, ifelse(results_df__for_overview_all$run == 6, .3, 1))))))
+results_df__for_overview_all_1_to_6$line <- factor(results_df__for_overview_all_1_to_6$line, level = c(1, 5, 2,  6, 3,   4))
 
-results_df__for_overview_all$linewidth <- factor(results_df__for_overview_all$linewidth, level = c(1.2, 1.1, .82, .81, .31, .3))
+results_df__for_overview_all_1_to_6$linewidth <- ifelse(results_df__for_overview_all_1_to_6$scenario == 1, 1.2,ifelse(results_df__for_overview_all_1_to_6$scenario == 3, .82, ifelse(results_df__for_overview_all_1_to_6$scenario == 5, .31, ifelse(results_df__for_overview_all_1_to_6$scenario == 2, 1.1, ifelse(results_df__for_overview_all_1_to_6$scenario == 4, .81, ifelse(results_df__for_overview_all_1_to_6$scenario == 6, .3, 1))))))
 
+results_df__for_overview_all_1_to_6$linewidth <- factor(results_df__for_overview_all_1_to_6$linewidth, level = c(1.2, 1.1, .82, .81, .31, .3))
+
+results_df__for_overview_all_1_to_6$size <- ifelse(results_df__for_overview_all_1_to_6$scenario == 1, 1.2,ifelse(results_df__for_overview_all_1_to_6$scenario == 3, .82, ifelse(results_df__for_overview_all_1_to_6$scenario == 5, .31, ifelse(results_df__for_overview_all_1_to_6$scenario == 2, 1.1, ifelse(results_df__for_overview_all_1_to_6$scenario == 4, .81, ifelse(results_df__for_overview_all_1_to_6$scenario == 6, .3, 1))))))
+results_df__for_overview_all_1_to_6$size <- factor(results_df__for_overview_all_1_to_6$size, level = c(1.2, 1.1, .82, .81, .31, .3))
+
+#plotting - here, a switch is used to either include the trend lines (only Sx Figure Sx, adding trend lines to Fig. 2 of the main paper), or not (Fig. 2, 3, 4 in the main paper)
+elevated_temperature_scenarios <- FALSE#TODO  set to TRUE if the workaround for the six scenarios works which is not the case yet
 
 override.col <- c( "#009E73", "#F0E442", "#0072B2", "#E69F00", "#56B4E9", "#D55E00")
 override.line <- c(1, 5, 2, 6, 3, 4)
-override.linewidth <- c(1.2, 1.1, .82, .81,  .41,  .4)
+override.linewidth <- c(2.2, 2.1, 1.02, 1.01,  .41,  .4)#this is redundant to setting linewidth in the data
+override.size <-  c(2.2, 2.1, 1.02, 1.01,  .41,  .4)
 
 my.formula <- y ~ x
 
-(plot_trends_BOC <- ggplot(data = results_df__for_overview_all)+
+(plot_trends_BOC <- ggplot(data = results_df__for_overview_all_1_to_6)+
     geom_smooth(method = "lm",
-                data = results_df__for_overview_all, aes(x = dateRi, y = BOC, colour = as.factor(colour_for_plot), lty =  as.factor(line), lwd = as.factor(linewidth) ), se=FALSE,  formula = my.formula )+ 
-    scale_colour_manual("Run",values = c("#009E73", "#F0E442", "#0072B2", "#E69F00", "#56B4E9", "#D55E00") ,
+                data = results_df__for_overview_all_1_to_6, aes(x = dateRi, y = BOC, colour = as.factor(colour_for_plot), lty =  as.factor(line), lwd = as.factor(linewidth) ), se=FALSE,  formula = my.formula )+ 
+    #geom_point(data = data_from_lm_i_list_fitted_conc_t_0_six_runs, aes(x = dateRi, y = BOC, colour = as.factor(colour_for_plot)#, shape = as.factor(shape_for_plot), size = size 
+    #) )+ 
+    scale_colour_manual("Scenario",values = c("#009E73", "#F0E442", "#0072B2", "#E69F00", "#56B4E9", "#D55E00") ,
                         labels = c("Reference", "No fauna", "+1.5°C", "No fauna  +1.5°C", "+3°C", "No fauna +3°C"))+
-    scale_linetype_manual("Run", values = c(1, 5, 2, 6, 3, 4),
+    scale_linetype_manual("Scenario", values = c(1, 5, 2, 6, 3, 4),
                           labels = c("Reference", "No fauna", "+1.5°C", "No fauna  +1.5°C", "+3°C", "No fauna +3°C"))+
     
-    scale_linewidth_manual("Run", values = c(1.2, 1.1, .82, .81,  .41,  .4),
+    scale_linewidth_manual("Scenario", values = c(2.2, 2.1, 1.02, 1.01,  .41,  .4),
+                           labels = c("Reference", "No fauna", "+1.5°C", "No fauna  +1.5°C", "+3°C", "No fauna +3°C"))+
+    scale_size_manual("Scenario", values = c(2.2, 2.1, 1.02, 1.01,  .41,  .4),
+                           labels = c("Reference", "No fauna", "+1.5°C", "No fauna  +1.5°C", "+3°C", "No fauna +3°C"))+
+    scale_shape_manual("Scenario", values = c(2.2, 2.1, 1.02, 1.01,  .41,  .4),
                            labels = c("Reference", "No fauna", "+1.5°C", "No fauna  +1.5°C", "+3°C", "No fauna +3°C"))+
     
     guides(colour = guide_legend(override.aes = list(line = override.line, colour = override.col, linewidth = override.linewidth))) +
@@ -1023,22 +1080,26 @@ my.formula <- y ~ x
           axis.text.x = element_text(angle = 45, vjust = 0.4),
           legend.key = element_blank(), 
           legend.background=element_blank(),
-        axis.title.y = element_textbox_simple(width = NULL,
+          axis.title.y = element_textbox_simple(width = NULL,
                                               orientation = 'left-rotated')# necessary for the ylab with library ggtext
     )
 )
 
 if (unified_axes == 1) {
+  if(elevated_temperature_scenarios == TRUE) {
+(plot_trends_BOC <- plot_trends_BOC +
+     facet_wrap(elevated_temperature_scenarios~group_letter, ncol = 4))
   
+  }else{
   (plot_trends_BOC <- plot_trends_BOC +
      facet_wrap(.~group_letter, ncol = 4))
-  
+  }
   setwd(gw_FuldaEcosystemServices_plots_path)
   ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6__one_y_scale.png"), width = 8, height = 3)
   ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6__one_y_scale.pdf"), width = 8, height = 3)
   
 }else{
-  (plot_trends_COD <- plot_trends_COD+
+  (plot_trends_BOC <- plot_trends_BOC +
      facet_wrap(.~group_letter, scales="free_y", ncol = 4))
   ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6__free_y_scale.png"), width = 8, height = 3)
   ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6__free_y_scale.pdf"), width = 8, height = 3)
@@ -1046,18 +1107,18 @@ if (unified_axes == 1) {
 
 
 
-(plot_trends_MO <- ggplot(data = results_df__for_overview_all)+
+(plot_trends_MO <- ggplot(data = results_df__for_overview_all_1_to_6)+
     
     geom_smooth(method = "lm",
-                data = results_df__for_overview_all, aes(x = dateRi, y = MO_het, colour = as.factor(colour_for_plot), lty =  as.factor(line), lwd = as.factor(linewidth)
+                data = results_df__for_overview_all_1_to_6, aes(x = dateRi, y = MO_het, colour = as.factor(colour_for_plot), lty =  as.factor(line), lwd = as.factor(linewidth)
                 ),
                 se=FALSE,  formula = my.formula )+ 
-    scale_colour_manual("Run",values = c("#009E73", "#F0E442", "#0072B2", "#E69F00", "#56B4E9", "#D55E00") ,
+    scale_colour_manual("Scenario",values = c("#009E73", "#F0E442", "#0072B2", "#E69F00", "#56B4E9", "#D55E00") ,
                         labels = c("Reference", "No fauna", "+1.5°C", "No fauna  +1.5°C", "+3°C", "No fauna +3°C"))+
-    scale_linetype_manual("Run", values = c(1, 5, 2, 6, 3, 4),
+    scale_linetype_manual("Scenario", values = c(1, 5, 2, 6, 3, 4),
                           labels = c("Reference", "No fauna", "+1.5°C", "No fauna  +1.5°C", "+3°C", "No fauna +3°C"))+
-    
-    scale_linewidth_manual("Run", values = c(1.2, 1.1, .82, .81,  .41,  .4),
+      
+    scale_linewidth_manual("Scenario", values = c(2.2, 2.1, 1.02, 1.01,  .41,  .4),
                            labels = c("Reference", "No fauna", "+1.5°C", "No fauna  +1.5°C", "+3°C", "No fauna +3°C"))+
     
     guides(colour = guide_legend(override.aes = list(line = override.line, colour = override.col, linewidth = override.linewidth))) +
@@ -1070,28 +1131,41 @@ if (unified_axes == 1) {
           axis.text.x = element_text(angle = 45, vjust = 0.4),
           legend.key = element_blank(), 
           legend.background=element_blank(),
-        axis.title.y = element_textbox_simple(width = NULL,
+          axis.title.y = element_textbox_simple(width = NULL,
                                               orientation = 'left-rotated')# necessary for the ylab with library ggtext
-    )+
-    facet_wrap(.~group_letter, scales="free_y", ncol = 4)
-)
-setwd(gw_FuldaEcosystemServices_plots_path)
-ggsave("plot_trends_MO_1_2_3_4_5_6__.png", width = 8, height = 2.5)
-ggsave("plot_trends_MO_1_2_3_4_5_6__.pdf", width = 8, height = 2.5)
+    )
+    )
+
+
+if (unified_axes == 1) {
+  
+  (plot_trends_MO <- plot_trends_MO +
+     facet_wrap(.~group_letter, ncol = 4))
+  
+  setwd(gw_FuldaEcosystemServices_plots_path)
+  ggsave(paste0("plot_trends_MO_1_2_3_4_5_6__one_y_scale.png"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_MO_1_2_3_4_5_6__one_y_scale.pdf"), width = 8, height = 3)
+  
+}else{
+  (plot_trends_MO <- plot_trends_MO +
+     facet_wrap(.~group_letter, scales="free_y", ncol = 4))
+  ggsave(paste0("plot_trends_MO_1_2_3_4_5_6__free_y_scale.png"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_MO_1_2_3_4_5_6__free_y_scale.pdf"), width = 8, height = 3)
+}
 
 
 
-(plot_trends_fauna <- ggplot(data = results_df__for_overview_all)+
+(plot_trends_fauna <- ggplot(data = results_df__for_overview_all_1_to_6)+
     geom_smooth(method = "lm",
-                data = results_df__for_overview_all, aes(x = dateRi, y = fauna, colour = as.factor(colour_for_plot), lty =  as.factor(line), lwd = as.factor(linewidth)  ), 
+                data = results_df__for_overview_all_1_to_6, aes(x = dateRi, y = fauna, colour = as.factor(colour_for_plot), lty =  as.factor(line), lwd = as.factor(linewidth)  ), 
                 se=FALSE,  formula = my.formula )+
-    scale_colour_manual("Run",values = c("#009E73", "#F0E442", "#0072B2", "#E69F00", "#56B4E9", "#D55E00") ,
+    scale_colour_manual("Scenario",values = c("#009E73", "#F0E442", "#0072B2", "#E69F00", "#56B4E9", "#D55E00") ,
                         labels = c("Reference", "No fauna", "+1.5°C", "No fauna  +1.5°C", "+3°C", "No fauna +3°C"))+
-    scale_linetype_manual("Run", values = c(1, 5, 2, 6, 3, 4),
-                          labels = c("Reference", "No fauna", "+1.5°C", "No fauna  +1.5°C", "+3°C", "No fauna +3°C"))+
-    scale_linewidth_manual("Run", values = c(1.2, 1.1, .82, .81,  .41,  .4),
+    scale_linetype_manual("Scenario", values = c(1, 5, 2, 6, 3, 4),
+                          labels = c("Reference", "No fauna", "+1.5°C", "No fauna  +1.5°C", "+3°C", "No fauna +3°C"))+   
+    scale_linewidth_manual("Scenario", values = c(2.2, 2.1, 1.02, 1.01,  .41,  .4),
                            labels = c("Reference", "No fauna", "+1.5°C", "No fauna  +1.5°C", "+3°C", "No fauna +3°C"))+
-    
+   
     guides(colour = guide_legend(override.aes = list(line = override.line, colour = override.col, linewidth = override.linewidth))) +
     
     #labs(x = "Date", y = "Fauna [mol COD / L]") +
@@ -1103,121 +1177,284 @@ ggsave("plot_trends_MO_1_2_3_4_5_6__.pdf", width = 8, height = 2.5)
           axis.text.x = element_text(angle = 45, vjust = 0.4),
           legend.key = element_blank(), 
           legend.background=element_blank(),
-        axis.title.y = element_textbox_simple(width = NULL,
+          axis.title.y = element_textbox_simple(width = NULL,
                                               orientation = 'left-rotated')# necessary for the ylab with library ggtext
-    )+
-    facet_wrap(.~group_letter, scales="free_y", ncol = 4)
-)
+    )
+    )
+
+
 setwd(gw_FuldaEcosystemServices_plots_path)
-ggsave("plot_trends_fauna_1_2_3_4_5_6__.png", width = 8, height = 2.5)
-ggsave("plot_trends_fauna_1_2_3_4_5_6__.pdf", width = 8, height = 2.5)
-
-
-
-######
-#trend plots with the extreme Yac and K_ac
-######
-#the code from here requires reading in the results as in the block marked for outcommenting above 
-results_df__for_overview_all <- rbind(results_df_1, results_df_2, results_df_3, results_df_4, results_df_5, results_df_6, results_df_7, results_df_8)
-
-
-setwd(gw_FuldaEcosystemServices_results_txt_path)
-
-write.table(results_df__for_overview_all, "results_df__for_overview_all_for_barplot_1_2_3_4_5_6_7_8.txt", row.names = FALSE)
-
-results_df__for_overview_all$dateRi <- as.Date(results_df__for_overview_all$dateRi)
-
-results_df__for_overview_all$group_letter <- factor(results_df__for_overview_all$group_letter , levels = c("R", "M", "P", "A"))
-
-results_df__for_overview_all_long <- results_df__for_overview_all %>%
-  dplyr::group_by(dateRi, group_letter, run) %>%
-  tidyr::pivot_longer(cols = c(DETRITUS, BOC, MO_het, fauna), names_to = "variable", values_to = "value")
-
-#calculate trends 
-lm_i_df <- lm_i_list <- NULL
-i <- j <- 1 
-
-for(i in c(1:length(unique(results_df__for_overview_all_long$run)))){
   
-  for(j in c(1:length(unique(results_df__for_overview_all_long$group_letter)))){
-    
-    for(k in c(1:length(unique(results_df__for_overview_all_long$variable)))){
-      
-      run_i <- unique(results_df__for_overview_all_long$run)[i]
-      group_letter_j <- unique(results_df__for_overview_all_long$group_letter)[j]
-      variable_k <- unique(results_df__for_overview_all_long$variable)[k]
-      
-      results_df__for_overview_all_long_i <- results_df__for_overview_all_long %>%
-        dplyr::filter(run == run_i  & group_letter == group_letter_j &
-                        variable == variable_k) 
-      
-      lm_i <-   lm(results_df__for_overview_all_long_i$value ~  results_df__for_overview_all_long_i$dateRi) 
-      lm_i_df$coefficient_intercept <- lm_i$coefficients[1][[1]]
-      lm_i_df$coefficient_slope <- lm_i$coefficients[2][[1]]
-      
-      if(length(anova(lm_i)$F_value[1][[1]] > 0)) {
-        lm_i_df$F_value <- anova(lm_i)$F_value[1][[1]]
-      }else{
-        lm_i_df$F_value <- "NA"
-      }
-      lm_i_df$p_val <- anova(lm_i)$"Pr(>F)"[1]
-      lm_i_df$run <- run_i
-      lm_i_df$group_letter <- group_letter_j
-      lm_i_df$variable <- variable_k
-      
-      lm_i_df$max_ <- max(results_df__for_overview_all_long_i$value, na.rm = TRUE)
-      lm_i_df$conc_t_0 <- results_df__for_overview_all_long_i$value[1]
-      lm_i_df$conc_t_max <- results_df__for_overview_all_long_i$value[length(results_df__for_overview_all_long_i$value)]
-      lm_i_df$fitted_conc_t_0 <- lm_i$fitted.values[1]
-      lm_i_df$fitted_conc_t_max <- lm_i$fitted.values[length(lm_i$fitted.values)]
-      lm_i_df$fitted_diff_over_observation_period <- lm_i$fitted.values[length(lm_i$fitted.values)]-lm_i$fitted.values[1]
-      lm_i_df$slope_per_year <- lm_i_df$diff_over_observation_period/lm_i_df$time_span
-      lm_i_list <- rbind(lm_i_list, as.data.frame(t(unlist(lm_i_df)))) 
-    }
-  }
+if (unified_axes == 1) {
+  
+  (plot_trends_fauna <- plot_trends_fauna +
+     facet_wrap(.~group_letter, ncol = 4))
+  
+  ggsave(paste0("plot_trends_fauna_1_2_3_4_5_6__one_y_scale.png"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_fauna_1_2_3_4_5_6__one_y_scale.pdf"), width = 8, height = 3)
+  
+}else{
+  (plot_trends_fauna <- plot_trends_fauna +
+     facet_wrap(.~group_letter, scales="free_y", ncol = 4))
+  ggsave(paste0("plot_trends_fauna_1_2_3_4_5_6__free_y_scale.png"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_fauna_1_2_3_4_5_6__free_y_scale.pdf"), width = 8, height = 3)
 }
 
-names(lm_i_list) <- sub("diff_over_observation_period.1342", "fitted_diff_over_observation_period", names(lm_i_list) )
-names(lm_i_list) <- sub("fitted_fitted_diff_over_observation_period", "fitted_diff_over_observation_period", names(lm_i_list) )
-names(lm_i_list) <- sub("fitted_conc_t_0.1", "fitted_conc_t_0", names(lm_i_list) )
-names(lm_i_list) <- sub("fitted_conc_t_max.1342", "fitted_conc_t_max", names(lm_i_list) )
 
-lm_i_list_ <- lm_i_list %>%
-  dplyr::mutate(group = ifelse(group_letter==3,"R",ifelse(group_letter==2,"P",ifelse(group_letter==4,"A",ifelse(group_letter==1,"M","z"))))) %>%
-  #dplyr::select(c("run", "group", "variable", "coefficient_intercept", "coefficient_slope",  "F_value", "p_val", "fitted_diff_over_observation_period", "conc_t_0", "conc_t_max", "fitted_conc_t_0", "fitted_conc_t_max", "group_letter", "max_"))
-  dplyr::select(c("run", "group_letter", "variable", "coefficient_intercept", "coefficient_slope",  "F_value", "p_val", "fitted_diff_over_observation_period", "conc_t_0", "conc_t_max", "fitted_conc_t_0", "fitted_conc_t_max", "group_letter", "max_"))
 
+######
+#trend plots with the extreme k1 
+######
+#the code from here requires reading in the results as in the block marked for outcommenting above 
+results_df__for_overview_all_1_to_8 <- read.table("results_df__for_overview_all__1_2_3_4_5_6_7_8_9_10.txt", header = TRUE) %>%
+dplyr::filter(scenario %in% c(1:8))
+
+
+results_df__for_overview_all_1_to_8$dateRi <- as.Date(results_df__for_overview_all_1_to_8$dateRi)
+
+results_df__for_overview_all_1_to_8$group_letter <- factor(results_df__for_overview_all_1_to_8$group_letter , levels = c("R", "M", "P", "A"))
+
+results_df__for_overview_all_1_to_8_long <- results_df__for_overview_all_1_to_8 %>%
+  dplyr::group_by(dateRi, group_letter, scenario) %>%
+  tidyr::pivot_longer(cols = c(DETRITUS, BOC, MO_het, fauna), names_to = "variable", values_to = "value")
+
+
+# now the frist 6 in grey because they had been plotted in detail already, and the extreme scenarios in other colours
+#colors chosen according to https://stackoverflow.com/questions/57153428/r-plot-color-combinations-that-are-colorblind-accessible
+#colours of scenarios 1 to 6 in grey
+results_df__for_overview_all_1_to_8$colour_for_plot <- ifelse(results_df__for_overview_all_1_to_8$scenario == 1, "#1a1b1a",ifelse(results_df__for_overview_all_1_to_8$scenario == 3, "#2c2c2c", ifelse(results_df__for_overview_all_1_to_8$scenario == 5, "#353636", ifelse(results_df__for_overview_all_1_to_8$scenario == 2, "#373838", ifelse(results_df__for_overview_all_1_to_8$scenario == 4, "#009E73", ifelse(results_df__for_overview_all_1_to_8$scenario == 6, "#2d2e2e",
+   ifelse(results_df__for_overview_all_1_to_8$scenario == 7, "#0072B2", 
+   ifelse(results_df__for_overview_all_1_to_8$scenario == 8, "#E69F00", "black"))))))))
+
+results_df__for_overview_all_1_to_8$line <- ifelse(results_df__for_overview_all_1_to_8$scenario == 1, 2,ifelse(results_df__for_overview_all_1_to_8$scenario == 3, 2, ifelse(results_df__for_overview_all_1_to_8$scenario == 5, 2,  ifelse(results_df__for_overview_all_1_to_8$scenario == 2, 2, ifelse(results_df__for_overview_all_1_to_8$scenario == 4, 2, ifelse(results_df__for_overview_all_1_to_8$scenario == 6, 2, ifelse(results_df__for_overview_all_1_to_8$scenario == 7, 1, ifelse(results_df__for_overview_all_1_to_8$scenario == 8, 1, 1))))))))
+
+results_df__for_overview_all_1_to_8$linewidth <- ifelse(results_df__for_overview_all_1_to_8$scenario == 1, .8,ifelse(results_df__for_overview_all_1_to_8$scenario == 3, .8, ifelse(results_df__for_overview_all_1_to_8$scenario == 5, .8, ifelse(results_df__for_overview_all_1_to_8$scenario == 2, .8, ifelse(results_df__for_overview_all_1_to_8$scenario == 4, .8, ifelse(results_df__for_overview_all_1_to_8$scenario == 6, .8, ifelse(results_df__for_overview_all_1_to_8$scenario == 7, 2.1, ifelse(results_df__for_overview_all_1_to_8$scenario == 8, 2.11, 1))))))))
+
+
+df2 = results_df__for_overview_all_1_to_8 %>%
+  dplyr::filter(scenario == 7)%>%
+  data.frame()
+
+df3 = results_df__for_overview_all_1_to_8 %>%
+  dplyr::filter(scenario == 8)%>%
+  data.frame()
+
+results_df__for_overview_all_1_to_6 = results_df__for_overview_all %>%
+  dplyr::filter(scenario %in% c(1:6))
+
+(plot_trends_BOC <- ggplot(data = results_df__for_overview_all_1_to_8)+
+    geom_smooth(method = "lm",
+                data = results_df__for_overview_all_1_to_8, aes(x = dateRi, y = BOC, group = as.factor(colour_for_plot)#, #lty =  as.factor(line), lwd = as.factor(linewidth) 
+                ), 
+                se=FALSE,  formula = my.formula, show.legend = FALSE, colour = "grey", lwd = .5
+                 )+ 
+   
+  new_scale_colour() + # requires library(ggnewscale)
+  geom_smooth(method = "lm",
+    (aes(x = dateRi, y = BOC, colour = "k1 minimum (0.0000001)")), 
+             data = df2,# alpha = 0.4, 
+                se=FALSE,  formula = my.formula) +
+  geom_smooth(method = "lm",
+    (aes(x = dateRi, y = BOC, colour = "k1 maximum (1)")),            data = df3, #alpha = 0.4
+                se=FALSE,  formula = my.formula) +
+#  scale_colour_discrete(
+ #   name = ""
+  #) +
+
+    #labs(x = "Date", y = "BOC [mol COD / L]") +
+    labs(x = "Date", y = "BOC [mol COD L<sup>-1</sup>]")+ 
+
+    theme(panel.background = element_rect(fill = "white",  colour = "black", 
+                                          linetype = "solid" ),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.text = element_text(colour = "black"), 
+          axis.text.x = element_text(angle = 45, vjust = 0.4),
+          legend.key = element_blank(), 
+          legend.background=element_blank(),
+          axis.title.y = element_textbox_simple(width = NULL,
+                                              orientation = 'left-rotated')# necessary for the ylab with library ggtext
+    )
+)
+
+
+if (unified_axes == 1) {
+  
+  (plot_trends_BOC <- plot_trends_BOC +
+     facet_wrap(.~group_letter, ncol = 4))
+  
+  setwd(gw_FuldaEcosystemServices_plots_path)
+  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_7_8_one_y_scale.png"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_7_8_one_y_scale.pdf"), width = 8, height = 3)
+  
+}else{
+  (plot_trends_BOC <- plot_trends_BOC+
+     facet_wrap(.~group_letter, scales="free_y", ncol = 4))
+  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_7_8_free_y_scale.png"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_7_8_free_y_scale.pdf"), width = 8, height = 3)
+}
+
+
+    
+
+(plot_trends_MO <- ggplot(data = results_df__for_overview_all_1_to_8)+
+    geom_smooth(method = "lm",
+                data = results_df__for_overview_all_1_to_8, aes(x = dateRi, y = MO_het, group = as.factor(colour_for_plot)#, #lty =  as.factor(line), lwd = as.factor(linewidth) 
+                ), 
+                se=FALSE,  formula = my.formula, show.legend = FALSE, colour = "grey", lwd = .5
+                 )+ 
+   
+  new_scale_colour() + # requires library(ggnewscale)
+  geom_smooth(method = "lm",
+    (aes(x = dateRi, y = BOC, colour = "k1 minimum (0.0000001)")), 
+             data = df2,# alpha = 0.4, 
+                se=FALSE,  formula = my.formula) +
+  geom_smooth(method = "lm",
+    (aes(x = dateRi, y = BOC, colour = "k1 maximum (1)")),            data = df3, #alpha = 0.4
+                se=FALSE,  formula = my.formula) +
+  scale_colour_discrete(
+    name = ""
+  ) +
+
+    #labs(x = "Date", y = "BOC [mol COD / L]") +
+    labs(x = "Date", y = "BOC [mol COD L<sup>-1</sup>]")+ 
+
+    theme(panel.background = element_rect(fill = "white",  colour = "black", 
+                                          linetype = "solid" ),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.text = element_text(colour = "black"), 
+          axis.text.x = element_text(angle = 45, vjust = 0.4),
+          legend.key = element_blank(), 
+          legend.background=element_blank(),
+          axis.title.y = element_textbox_simple(width = NULL,
+                                              orientation = 'left-rotated')# necessary for the ylab with library ggtext
+    )+
+    #labs(x = "Date", y = "Microorganisms [mol COD / L]") +
+    labs(x = "Date", y = "Microbial dry mass [mol COD L<sup>-1</sup>]")
+)
+
+if (unified_axes == 1) {
+  
+  (plot_trends_MO <- plot_trends_MO +
+     facet_wrap(.~group_letter, ncol = 4))
+  
+  setwd(gw_FuldaEcosystemServices_plots_path)
+  ggsave(paste0("plot_trends_MO_1_2_3_4_5_6_7_8_one_y_scale.png"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_MO_1_2_3_4_5_6_7_8_one_y_scale.pdf"), width = 8, height = 3)
+  
+}else{
+  (plot_trends_MO <- plot_trends_MO+
+     facet_wrap(.~group_letter, scales="free_y", ncol = 4))
+  ggsave(paste0("plot_trends_MO_1_2_3_4_5_6_7_8_free_y_scale.png"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_MO_1_2_3_4_5_6_7_8_free_y_scale.pdf"), width = 8, height = 3)
+}
+
+ 
+ (plot_trends_fauna <- ggplot(data = results_df__for_overview_all_1_to_8)+
+    geom_smooth(method = "lm",
+                data = results_df__for_overview_all_1_to_8, aes(x = dateRi, y = fauna, group = as.factor(colour_for_plot)#, #lty =  as.factor(line), lwd = as.factor(linewidth) 
+                ), 
+                se=FALSE,  formula = my.formula, show.legend = FALSE, colour = "grey", lwd = .5
+                 )+ 
+   
+  new_scale_colour() + ## requires library(ggnewscale)
+  geom_smooth(method = "lm",
+   (aes(x = dateRi, y = BOC, colour = "k1 minimum (0.0000001)")), 
+             data = df2,# alpha = 0.4, 
+                se=FALSE,  formula = my.formula) +
+  geom_smooth(method = "lm",
+    (aes(x = dateRi, y = BOC, colour = "k1 maximum (1)")),             data = df3, #alpha = 0.4
+                se=FALSE,  formula = my.formula) +
+  scale_colour_discrete(
+    name = ""
+  ) +
+
+    theme(panel.background = element_rect(fill = "white",  colour = "black", 
+                                          linetype = "solid" ),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.text = element_text(colour = "black"), 
+          axis.text.x = element_text(angle = 45, vjust = 0.4),
+          legend.key = element_blank(), 
+          legend.background=element_blank(),
+          axis.title.y = element_textbox_simple(width = NULL,
+                                              orientation = 'left-rotated')# necessary for the ylab with library ggtext
+    )+
+    #labs(x = "Date", y = "Fauna [mol COD / L]") +
+    labs(x = "Date", y = "Fauna dry mass [mol COD L<sup>-1</sup>]")
+ )
+
+if (unified_axes == 1) {
+  
+  (plot_trends_fauna <- plot_trends_fauna +
+     facet_wrap(.~group_letter, ncol = 4))
+  
+  setwd(gw_FuldaEcosystemServices_plots_path)
+  ggsave(paste0("plot_trends_fauna_1_2_3_4_5_6_7_8_one_y_scale.png"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_fauna_1_2_3_4_5_6_7_8_one_y_scale.pdf"), width = 8, height = 3)
+  
+}else{
+  (plot_trends_fauna <- plot_trends_fauna+
+     facet_wrap(.~group_letter, scales="free_y", ncol = 4))
+  ggsave(paste0("plot_trends_fauna_1_2_3_4_5_6_7_8_free_y_scale.png"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_fauna_1_2_3_4_5_6_7_8_free_y_scale.pdf"), width = 8, height = 3)
+}
+
+
+
+
+######
+#trend plots with the extreme Yac
+######
+
+#the code from here requires reading in the results as in the block marked for outcommenting above 
 setwd(gw_FuldaEcosystemServices_results_txt_path)
-write.table(lm_i_list_, "results_df__lm_1_2_3_4_5_6_7_8_.txt", row.names = FALSE)
-# lm_i_list<- read.table( "results_df__lm_1_2_3_4_5_6_7_8_.txt", header = TRUE)
+results_df__for_overview_all_1_to_6_9_10 <- read.table("results_df__for_overview_all__1_2_3_4_5_6_7_8_9_10.txt", header = TRUE) %>%
+dplyr::filter(scenario %in% c(1:6,9,10))
+
+
+results_df__for_overview_all_1_to_6_9_10$dateRi <- as.Date(results_df__for_overview_all_1_to_6_9_10$dateRi)
+
+results_df__for_overview_all_1_to_6_9_10$group_letter <- factor(results_df__for_overview_all_1_to_6_9_10$group_letter , levels = c("R", "M", "P", "A"))
+
+#TODO not needed, correct?
+#results_df__for_overview_all_long <- results_df__for_overview_all %>%
+#  dplyr::group_by(dateRi, group_letter, run) %>%
+#  tidyr::pivot_longer(cols = c(DETRITUS, BOC, MO_het, fauna), names_to = "variable", values_to = "value")
+
 
 #colors chosen according to https://stackoverflow.com/questions/57153428/r-plot-color-combinations-that-are-colorblind-accessible
 #colours of runs 1 to 6 in grey
-results_df__for_overview_all$colour_for_plot <- ifelse(results_df__for_overview_all$run == 1, "#1a1b1a",ifelse(results_df__for_overview_all$run == 3, "#2c2c2c", ifelse(results_df__for_overview_all$run == 5, "#353636", ifelse(results_df__for_overview_all$run == 2, "#373838", ifelse(results_df__for_overview_all$run == 4, "#009E73", ifelse(results_df__for_overview_all$run == 6, "#2d2e2e",
-   ifelse(results_df__for_overview_all$run == 7, "#0072B2", 
-   ifelse(results_df__for_overview_all$run == 8, "#E69F00", "black"))))))))
+results_df__for_overview_all_1_to_6_9_10$colour_for_plot <- 
+ifelse(results_df__for_overview_all_1_to_6_9_10$run == 1, "#1a1b1a",
+ifelse(results_df__for_overview_all_1_to_6_9_10$run == 3, "#2c2c2c", 
+ifelse(results_df__for_overview_all_1_to_6_9_10$run == 5, "#353636",
+ ifelse(results_df__for_overview_all_1_to_6_9_10$run == 2, "#373838", 
+ifelse(results_df__for_overview_all_1_to_6_9_10$run == 4, "#009E73", 
+ifelse(results_df__for_overview_all_1_to_6_9_10$run == 6, "#2d2e2e",
+   ifelse(results_df__for_overview_all_1_to_6_9_10$run == 7, "#0072B2", 
+   ifelse(results_df__for_overview_all_1_to_6_9_10$run == 8, "#E69F00", "black"))))))))
 
-results_df__for_overview_all$line <- ifelse(results_df__for_overview_all$run == 1, 2,ifelse(results_df__for_overview_all$run == 3, 2, ifelse(results_df__for_overview_all$run == 5, 2,  ifelse(results_df__for_overview_all$run == 2, 2, ifelse(results_df__for_overview_all$run == 4, 2, ifelse(results_df__for_overview_all$run == 6, 2, ifelse(results_df__for_overview_all$run == 7, 1, ifelse(results_df__for_overview_all$run == 8, 1, 1))))))))
-
-results_df__for_overview_all$linewidth <- ifelse(results_df__for_overview_all$run == 1, .8,ifelse(results_df__for_overview_all$run == 3, .8, ifelse(results_df__for_overview_all$run == 5, .8, ifelse(results_df__for_overview_all$run == 2, .8, ifelse(results_df__for_overview_all$run == 4, .8, ifelse(results_df__for_overview_all$run == 6, .8, ifelse(results_df__for_overview_all$run == 7, 1, ifelse(results_df__for_overview_all$run == 8, 1.1, 1))))))))
+results_df__for_overview_all_1_to_6_9_10$line <- ifelse(results_df__for_overview_all_1_to_6_9_10$run == 1, 2,ifelse(results_df__for_overview_all_1_to_6_9_10$run == 3, 2, ifelse(results_df__for_overview_all_1_to_6_9_10$run == 5, 2,  ifelse(results_df__for_overview_all_1_to_6_9_10$run == 2, 2, ifelse(results_df__for_overview_all_1_to_6_9_10$run == 4, 2, ifelse(results_df__for_overview_all_1_to_6_9_10$run == 6, 2, ifelse(results_df__for_overview_all_1_to_6_9_10$run == 7, 1, ifelse(results_df__for_overview_all_1_to_6_9_10$run == 8, 1, 1))))))))
 
 
-#from https://stackoverflow.com/questions/67219891/create-additional-independent-legends-in-ggplot2
-library(ggnewscale)
-df2 = results_df__for_overview_all %>%
-  dplyr::filter(run == 7)%>%
+results_df__for_overview_all_1_to_6_9_10$linewidth <- ifelse(results_df__for_overview_all_1_to_6_9_10$run == 1, .8,ifelse(results_df__for_overview_all_1_to_6_9_10$run == 3, .8, ifelse(results_df__for_overview_all_1_to_6_9_10$run == 5, .8, ifelse(results_df__for_overview_all_1_to_6_9_10$run == 2, .8, ifelse(results_df__for_overview_all_1_to_6_9_10$run == 4, .8, ifelse(results_df__for_overview_all_1_to_6_9_10$run == 6, .8, ifelse(results_df__for_overview_all_1_to_6_9_10$run == 7, 1, ifelse(results_df__for_overview_all_1_to_6_9_10$run == 8, 1.1, 1))))))))
+
+df2 = results_df__for_overview_all_1_to_6_9_10 %>%
+  dplyr::filter(run == 9)%>%
   data.frame()
 
-df3 = results_df__for_overview_all %>%
-  dplyr::filter(run == 8)%>%
+df3 = results_df__for_overview_all_1_to_6_9_10 %>%
+  dplyr::filter(run == 10)%>%
   data.frame()
 
 results_df__for_overview_all_1_to_6 = results_df__for_overview_all %>%
   dplyr::filter(run %in% c(1:6))
 
-(plot_trends_BOC <- ggplot(data = results_df__for_overview_all_1_to_6)+
+(plot_trends_BOC <- ggplot(data = results_df__for_overview_all_1_to_6_9_10)+
     geom_smooth(method = "lm",
-                data = results_df__for_overview_all_1_to_6, aes(x = dateRi, y = BOC, group = as.factor(colour_for_plot)#, #lty =  as.factor(line), lwd = as.factor(linewidth) 
+                data = results_df__for_overview_all_1_to_6_9_10, aes(x = dateRi, y = BOC, group = as.factor(colour_for_plot)#, #lty =  as.factor(line), lwd = as.factor(linewidth) 
                 ), 
                 se=FALSE,  formula = my.formula, show.legend = FALSE, colour = "grey", lwd = .5
                  )+ 
@@ -1246,7 +1483,7 @@ results_df__for_overview_all_1_to_6 = results_df__for_overview_all %>%
           axis.text.x = element_text(angle = 45, vjust = 0.4),
           legend.key = element_blank(), 
           legend.background=element_blank(),
-        axis.title.y = element_textbox_simple(width = NULL,
+          axis.title.y = element_textbox_simple(width = NULL,
                                               orientation = 'left-rotated')# necessary for the ylab with library ggtext
     )
 )
@@ -1258,83 +1495,121 @@ if (unified_axes == 1) {
      facet_wrap(.~group_letter, ncol = 4))
   
   setwd(gw_FuldaEcosystemServices_plots_path)
-  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_7_8_one_y_scale.png"), width = 8, height = 3)
-  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_7_8_one_y_scale.pdf"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_9_10_one_y_scale.png"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_9_10_one_y_scale.pdf"), width = 8, height = 3)
   
 }else{
-  (plot_trends_COD <- plot_trends_COD+
+  (plot_trends_BOC <- plot_trends_BOC+
      facet_wrap(.~group_letter, scales="free_y", ncol = 4))
-  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_7_8_free_y_scale.png"), width = 8, height = 3)
-  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_7_8_free_y_scale.pdf"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_9_10_free_y_scale.png"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_9_10_free_y_scale.pdf"), width = 8, height = 3)
 }
 
 
 
-(plot_trends_MO <- ggplot(data = results_df__for_overview_all)+
-    
+(plot_trends_MO <- ggplot(data = results_df__for_overview_all_1_to_6_9_10)+
     geom_smooth(method = "lm",
-                data = results_df__for_overview_all, aes(x = dateRi, y = MO_het, colour = as.factor(colour_for_plot), lty =  as.factor(line), lwd = as.factor(linewidth)
-                ),
-                se=FALSE,  formula = my.formula )+ 
-    scale_colour_manual("Run",values = c("#009E73", "#F0E442", "#0072B2", "#E69F00", "#56B4E9", "#D55E00") ,
-                        labels = c("Reference", "No fauna", "+1.5°C", "No fauna  +1.5°C", "+3°C", "No fauna +3°C"))+
-    scale_linetype_manual("Run", values = c(1, 5, 2, 6, 3, 4),
-                          labels = c("Reference", "No fauna", "+1.5°C", "No fauna  +1.5°C", "+3°C", "No fauna +3°C"))+
-    
-    scale_linewidth_manual("Run", values = c(1.2, 1.1, .82, .81,  .41,  .4),
-                           labels = c("Reference", "No fauna", "+1.5°C", "No fauna  +1.5°C", "+3°C", "No fauna +3°C"))+
-    
-    guides(colour = guide_legend(override.aes = list(line = override.line, colour = override.col, linewidth = override.linewidth))) +
-    
+                data = results_df__for_overview_all_1_to_6_9_10, aes(x = dateRi, y = MO_het, group = as.factor(colour_for_plot)#, #lty =  as.factor(line), lwd = as.factor(linewidth) 
+                ), 
+                se=FALSE,  formula = my.formula, show.legend = FALSE, colour = "grey", lwd = .5
+                 )+ 
+   
+  new_scale_colour() +
+  geom_smooth(method = "lm",
+    (aes(x = dateRi, y = BOC, colour = "Yield minimum (0.001)")), 
+             data = df2,# alpha = 0.4, 
+                se=FALSE,  formula = my.formula) +
+  geom_smooth(method = "lm",
+    (aes(x = dateRi, y = BOC, colour = "Yield maximum (0.8)")),
+             data = df3, #alpha = 0.4
+                se=FALSE,  formula = my.formula) +
+  scale_colour_discrete(
+    name = ""
+  ) +
+
+    #labs(x = "Date", y = "BOC [mol COD / L]") +
+    labs(x = "Date", y = "BOC [mol COD L<sup>-1</sup>]")+ 
+
+    theme(panel.background = element_rect(fill = "white",  colour = "black", 
+                                          linetype = "solid" ),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.text = element_text(colour = "black"), 
+          axis.text.x = element_text(angle = 45, vjust = 0.4),
+          legend.key = element_blank(), 
+          legend.background=element_blank(),
+          axis.title.y = element_textbox_simple(width = NULL,
+                                              orientation = 'left-rotated')# necessary for the ylab with library ggtext
+    )+
     #labs(x = "Date", y = "Microorganisms [mol COD / L]") +
-    labs(x = "Date", y = "Microbial dry mass [mol COD L<sup>-1</sup>]")+
-    theme(panel.background = element_rect(fill = "white",  colour = "black",  linetype = "solid" ),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          axis.text = element_text(colour = "black"), 
-          axis.text.x = element_text(angle = 45, vjust = 0.4),
-          legend.key = element_blank(), 
-          legend.background=element_blank(),
-        axis.title.y = element_textbox_simple(width = NULL,
-                                              orientation = 'left-rotated')# necessary for the ylab with library ggtext
-    )+
-    facet_wrap(.~group_letter, scales="free_y", ncol = 4)
+    labs(x = "Date", y = "Microbial dry mass [mol COD L<sup>-1</sup>]")
 )
-setwd(gw_FuldaEcosystemServices_plots_path)
-ggsave("plot_trends_MO_1_2_3_4_5_6_7_8.png", width = 8, height = 2.5)
-ggsave("plot_trends_MO_1_2_3_4_5_6_7_8.pdf", width = 8, height = 2.5)
 
+if (unified_axes == 1) {
+  
+  (plot_trends_MO <- plot_trends_MO +
+     facet_wrap(.~group_letter, ncol = 4))
+  
+  setwd(gw_FuldaEcosystemServices_plots_path)
+  ggsave(paste0("plot_trends_MO_1_2_3_4_5_6_9_10_one_y_scale.png"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_MO_1_2_3_4_5_6_9_10_one_y_scale.pdf"), width = 8, height = 3)
+  
+}else{
+  (plot_trends_MO <- plot_trends_MO+
+     facet_wrap(.~group_letter, scales="free_y", ncol = 4))
+  ggsave(paste0("plot_trends_MO_1_2_3_4_5_6_9_10_free_y_scale.png"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_MO_1_2_3_4_5_6_9_10_free_y_scale.pdf"), width = 8, height = 3)
+}
 
-
-(plot_trends_fauna <- ggplot(data = results_df__for_overview_all)+
+ 
+ (plot_trends_fauna <- ggplot(data = results_df__for_overview_all_1_to_6_9_10)+
     geom_smooth(method = "lm",
-                data = results_df__for_overview_all, aes(x = dateRi, y = fauna, colour = as.factor(colour_for_plot), lty =  as.factor(line), lwd = as.factor(linewidth)  ), 
-                se=FALSE,  formula = my.formula )+
-    scale_colour_manual("Run",values = c("#009E73", "#F0E442", "#0072B2", "#E69F00", "#56B4E9", "#D55E00") ,
-                        labels = c("Reference", "No fauna", "+1.5°C", "No fauna  +1.5°C", "+3°C", "No fauna +3°C"))+
-    scale_linetype_manual("Run", values = c(1, 5, 2, 6, 3, 4),
-                          labels = c("Reference", "No fauna", "+1.5°C", "No fauna  +1.5°C", "+3°C", "No fauna +3°C"))+
-    scale_linewidth_manual("Run", values = c(1.2, 1.1, .82, .81,  .41,  .4),
-                           labels = c("Reference", "No fauna", "+1.5°C", "No fauna  +1.5°C", "+3°C", "No fauna +3°C"))+
-    
-    guides(colour = guide_legend(override.aes = list(line = override.line, colour = override.col, linewidth = override.linewidth))) +
-    
-    #labs(x = "Date", y = "Fauna [mol COD / L]") +
-    labs(x = "Date", y = "Fauna dry mass [mol COD L<sup>-1</sup>])+ 
+                data = results_df__for_overview_all_1_to_6_9_10, aes(x = dateRi, y = fauna, 
+                group = as.factor(colour_for_plot)#, #lty =  as.factor(line), lwd = as.factor(linewidth) 
+                ), 
+                se=FALSE,  formula = my.formula, show.legend = FALSE, colour = "grey", lwd = .5
+                 )+ 
 
-    theme(panel.background = element_rect(fill = "white",  colour = "black",  linetype = "solid" ),
+    new_scale_colour() +
+  geom_smooth(method = "lm",
+    (aes(x = dateRi, y = BOC, colour = "Yield minimum (0.001)")), 
+             data = df2,# alpha = 0.4, 
+                se=FALSE,  formula = my.formula) +
+  geom_smooth(method = "lm",
+    (aes(x = dateRi, y = BOC, colour = "Yield maximum (0.8)")),
+             data = df3, #alpha = 0.4
+                se=FALSE,  formula = my.formula) +
+  scale_colour_discrete(
+    name = ""
+  ) +
+
+    theme(panel.background = element_rect(fill = "white",  colour = "black", 
+                                          linetype = "solid" ),
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
           axis.text = element_text(colour = "black"), 
           axis.text.x = element_text(angle = 45, vjust = 0.4),
           legend.key = element_blank(), 
           legend.background=element_blank(),
-        axis.title.y = element_textbox_simple(width = NULL,
+          axis.title.y = element_textbox_simple(width = NULL,
                                               orientation = 'left-rotated')# necessary for the ylab with library ggtext
     )+
-    facet_wrap(.~group_letter, scales="free_y", ncol = 4)
-)
-setwd(gw_FuldaEcosystemServices_plots_path)
-ggsave("plot_trends_fauna_1_2_3_4_5_6_7_8.png", width = 8, height = 2.5)
-ggsave("plot_trends_fauna_1_2_3_4_5_6_7_8.pdf", width = 8, height = 2.5)
+    #labs(x = "Date", y = "Fauna [mol COD / L]") +
+    labs(x = "Date", y = "Fauna dry mass [mol COD L<sup>-1</sup>]")
+ )
 
+if (unified_axes == 1) {
+  
+  (plot_trends_fauna <- plot_trends_fauna +
+     facet_wrap(.~group_letter, ncol = 4))
+  
+  setwd(gw_FuldaEcosystemServices_plots_path)
+  ggsave(paste0("plot_trends_fauna_1_2_3_4_5_6_9_10_one_y_scale.png"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_fauna_1_2_3_4_5_6_9_10_one_y_scale.pdf"), width = 8, height = 3)
+  
+}else{
+  (plot_trends_fauna <- plot_trends_fauna+
+     facet_wrap(.~group_letter, scales="free_y", ncol = 4))
+  ggsave(paste0("plot_trends_fauna_1_2_3_4_5_6_9_10_free_y_scale.png"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_fauna_1_2_3_4_5_6_9_10_free_y_scale.pdf"), width = 8, height = 3)
+}
