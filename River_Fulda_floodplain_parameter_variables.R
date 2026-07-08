@@ -79,7 +79,7 @@ parameter_variables<- function(run){
   
   Detritus_COD_mol_L_precipitation = parvar$Detritus_COD_mol_L_precipitation[run]
   
-  RECHARGE_COD_mol_per_m2_per_day        = ifelse(Fulda_daily_prec$RS >0, (TOC_COD_mol_m3_precipitation + Detritus_COD_mol_m3_precipitation)/365 * Fulda_daily_prec$RS/1000 , 0) # der hier ist wirklich mol per m2
+  RECHARGE_COD_mol_per_m2_per_day        = ifelse(Fulda_daily_prec$RS >0, (TOC_COD_mol_m3_precipitation + Detritus_COD_mol_m3_precipitation)/365 * Fulda_daily_prec$RS/1000 , 0) # mol per m2
   
   RECHARGE_COD_mol_per_m3_per_day <- RECHARGE_COD_mol_per_m2_per_day / aquifer_depth 
   
