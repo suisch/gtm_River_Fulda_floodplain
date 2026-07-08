@@ -9,7 +9,7 @@ library(cowplot)
 library(colorspace)
 #from https://stackoverflow.com/questions/67219891/create-additional-independent-legends-in-ggplot2
 library(ggnewscale) #new_scale_colour
-library(devtools) #TODO what for?!
+library(devtools) #
 
 #install package for color blind-safe plots
 # install.packages("ggokabeito")
@@ -349,7 +349,7 @@ DistrPar  <- list(
   c(0.00000001, .1), #factor_CC_MO
   c(1, 20), #rMO_COD_uptake_per_day_at_lab_temperature
   c(500,2000),#average_precipitation_mm_yr
-  c(0.5,1),#recharge_fraction_of_precipitation # was 1 in th efirst 6 scenarios
+  c(0.5,1),#recharge_fraction_of_precipitation # was 1 in the first 6 scenarios
   c(0.1, 1),#TOC_mol_m2_yr_precipitation
   c(1,20),#factor_how_many_times_Detritus_compared_to_TOC
   c(.0000001, 1),#k1 
@@ -632,14 +632,14 @@ for (g in 1:length(unique(results$group))){
 
 
 # for plotting the results, need to derive the results in a separate data frame
+#for a single run - howver, probably not relevant for SA here
 results <- gtm()
 
 #ggplot requires the data to be in data frame
 results_df <- as.data.frame(results)
 
 
-#TODO where needed ?
-maxmodelfauna <-max(results_df$fauna)
+
 #combine measured data with modelled data to calculate model accuracy - for that, join model results to measured values
 my.formula <- y ~ x
 
@@ -669,7 +669,7 @@ results_df__for_overview_all_long <- results_df__for_overview_all %>%
 
 
 ########
-### restrainging only to the six temperature and fauna scenarios
+### restrainging only to the six temperature and fauna scenarios, as shown in main paper and SI
 results_df__for_overview_all_1_to_6 = results_df__for_overview_all %>%
   dplyr::filter(scenario %in% c(1:6))
 
@@ -678,20 +678,21 @@ results_df__for_overview_all_1_to_6 = results_df__for_overview_all %>%
 ######
 #trend plots with the extreme k1 
 ######
-#TODO extreme Scenarios 7 and 8 are the scenarios of the first of the two  most sensitive parameters, i.e. k1, yielding Fig.  Figs. X in SI Sx
+# extreme Scenarios 7 and 8 are the scenarios of the first of the two  most sensitive parameters, i.e. k1, yielding Fig.  Figs. X in SI Sx
 
 
 
-#prepare data
+#prepare data for uncertainty
 
-#reading in the already existing file with all the GTM model scenarios 
+#reading in the already existing file with all the GTM model scenarios and restraining it first for the nown 6 scenarios of temperatur eand fauna 
+setwd(gw_FuldaEcosystemServices_results_txt_path)
 results_df__for_overview_all_1_to_6 <- read.table( "results_df__for_overview_all__1_2_3_4_5_6_7_8_9_10.txt", header = TRUE)%>%
 dplyr::filter(scenario %in% 1:6)
 results_df__for_overview_all_1_to_6$dateRi <- as.Date(results_df__for_overview_all_1_to_6$dateRi)
 
 results_df__for_overview_all_1_to_6$group_letter <- factor(results_df__for_overview_all_1_to_6$group_letter , levels = c("R", "M", "P", "A"))
 
-my.formula <- y ~ x
+my.formula <- y ~ x #redundant to above - make sure it is done, even when pre-saved data are used
 
 ######
 #trend plots with the extreme k1 which was one of the two most sensitive parameters
@@ -700,6 +701,7 @@ setwd(gw_FuldaEcosystemServices_results_txt_path)
 #as above, read in the GTM model results and smooth the linear model fits on the fly
 
 
+#The smoothing to linear models is done on the fly for the figures - the saving of the lm is only for the table in the SI 
 
 results_df__for_overview_all_1_to_8 <- read.table("results_df__for_overview_all__1_2_3_4_5_6_7_8_9_10.txt", header = TRUE) %>%
 dplyr::filter(scenario %in% c(1:8))
@@ -708,25 +710,42 @@ results_df__for_overview_all_1_to_8$dateRi <- as.Date(results_df__for_overview_a
 
 results_df__for_overview_all_1_to_8$group_letter <- factor(results_df__for_overview_all_1_to_8$group_letter , levels = c("R", "M", "P", "A"))
 
-results_df__for_overview_all_1_to_8_long <- results_df__for_overview_all_1_to_8 %>%
-  dplyr::group_by(dateRi, group_letter, scenario) %>%
-  tidyr::pivot_longer(cols = c(DETRITUS, BOC, MO_het, fauna), names_to = "variable", values_to = "value")
-
-
-# now the frist 6 in grey because they had been plotted in detail already, and the extreme scenarios in other colours
+# now the first 6 in grey because they had been plotted in detail already, and the extreme scenarios in other colours
 
 
 #colors chosen according to https://stackoverflow.com/questions/57153428/r-plot-color-combinations-that-are-colorblind-accessible
 #colours of scenarios 1 to 6 in grey, because they had been shown in detail in previous figures
-results_df__for_overview_all_1_to_8$colour_for_plot <- ifelse(results_df__for_overview_all_1_to_8$scenario == 1, "#1a1b1a",ifelse(results_df__for_overview_all_1_to_8$scenario == 3, "#2c2c2c", ifelse(results_df__for_overview_all_1_to_8$scenario == 5, "#353636", ifelse(results_df__for_overview_all_1_to_8$scenario == 2, "#373838", ifelse(results_df__for_overview_all_1_to_8$scenario == 4, "#009E73", ifelse(results_df__for_overview_all_1_to_8$scenario == 6, "#2d2e2e",
-   ifelse(results_df__for_overview_all_1_to_8$scenario == 7, "#0072B2", 
-   ifelse(results_df__for_overview_all_1_to_8$scenario == 8, "#E69F00", "black"))))))))
+ results_df__for_overview_all_1_to_8$colour_for_plot <- 
+ifelse(results_df__for_overview_all_1_to_8$scenario == 1, "#1a1b1a",
+ifelse(results_df__for_overview_all_1_to_8$scenario == 3, "#2c2c2c", 
+ifelse(results_df__for_overview_all_1_to_8$scenario == 5, "#353636", 
+ifelse(results_df__for_overview_all_1_to_8$scenario == 2, "#373838", 
+ifelse(results_df__for_overview_all_1_to_8$scenario == 4, "#009E73", 
+ifelse(results_df__for_overview_all_1_to_8$scenario == 6, "#2d2e2e",
+    ifelse(results_df__for_overview_all_1_to_8$scenario == 7, "#0072B2", 
+    ifelse(results_df__for_overview_all_1_to_8$scenario == 8, "#E69F00", "black"))))))))
 
-results_df__for_overview_all_1_to_8$line <- ifelse(results_df__for_overview_all_1_to_8$scenario == 1, 2,ifelse(results_df__for_overview_all_1_to_8$scenario == 3, 2, ifelse(results_df__for_overview_all_1_to_8$scenario == 5, 2,  ifelse(results_df__for_overview_all_1_to_8$scenario == 2, 2, ifelse(results_df__for_overview_all_1_to_8$scenario == 4, 2, ifelse(results_df__for_overview_all_1_to_8$scenario == 6, 2, ifelse(results_df__for_overview_all_1_to_8$scenario == 7, 1, ifelse(results_df__for_overview_all_1_to_8$scenario == 8, 1, 1))))))))
+results_df__for_overview_all_1_to_8$line <- 
+ifelse(results_df__for_overview_all_1_to_8$scenario == 1, 2,
+ifelse(results_df__for_overview_all_1_to_8$scenario == 3, 2, 
+ifelse(results_df__for_overview_all_1_to_8$scenario == 5, 2, 
+ ifelse(results_df__for_overview_all_1_to_8$scenario == 2, 2,
+ ifelse(results_df__for_overview_all_1_to_8$scenario == 4, 2,
+ ifelse(results_df__for_overview_all_1_to_8$scenario == 6, 2, 
+ifelse(results_df__for_overview_all_1_to_8$scenario == 7, 1, 
+ifelse(results_df__for_overview_all_1_to_8$scenario == 8, 1, 1))))))))
 
-results_df__for_overview_all_1_to_8$linewidth <- ifelse(results_df__for_overview_all_1_to_8$scenario == 1, .8,ifelse(results_df__for_overview_all_1_to_8$scenario == 3, .8, ifelse(results_df__for_overview_all_1_to_8$scenario == 5, .8, ifelse(results_df__for_overview_all_1_to_8$scenario == 2, .8, ifelse(results_df__for_overview_all_1_to_8$scenario == 4, .8, ifelse(results_df__for_overview_all_1_to_8$scenario == 6, .8, ifelse(results_df__for_overview_all_1_to_8$scenario == 7, 2.1, ifelse(results_df__for_overview_all_1_to_8$scenario == 8, 2.11, 1))))))))
+ results_df__for_overview_all_1_to_8$linewidth <- 
+ifelse(results_df__for_overview_all_1_to_8$scenario == 1, .8,
+ifelse(results_df__for_overview_all_1_to_8$scenario == 3, .8, 
+ifelse(results_df__for_overview_all_1_to_8$scenario == 5, .8,
+ ifelse(results_df__for_overview_all_1_to_8$scenario == 2, .8,
+ ifelse(results_df__for_overview_all_1_to_8$scenario == 4, .8, 
+ifelse(results_df__for_overview_all_1_to_8$scenario == 6, .8, 
+ifelse(results_df__for_overview_all_1_to_8$scenario == 7, 2.1, 
+ifelse(results_df__for_overview_all_1_to_8$scenario == 8, 2.11, 1))))))))
 
-#the two extreme k1 scenarios are plotted on top of the eight scenarios in order to get only their smoothing parameters
+#The two extreme k1 scenarios are plotted on top of the eight scenarios in order to get only their smoothing parameters
 df2 = results_df__for_overview_all_1_to_8 %>%
   dplyr::filter(scenario == 7)%>%
   data.frame()
@@ -739,6 +758,7 @@ df3 = results_df__for_overview_all_1_to_8 %>%
 
 ################## trend plots of the first of the two extreme scenarios of the two most sensitive parameters
 #k1
+#not shown in paper
 
 (plot_trends_BOC <- ggplot(data = results_df__for_overview_all_1_to_8)+
     geom_smooth(method = "lm",
@@ -795,6 +815,318 @@ if (unified_axes == 1) {
 
     
 
+# write polygon with the complete uncertainty area
+# Fig. 4 in paper
+
+#prepare data - first for k1
+
+dfk1_1 = results_df__for_overview_all %>%
+  dplyr::filter(scenario == 1 )%>%
+  data.frame()%>%
+  dplyr::select(dateRi, group_letter, BOC)
+
+dfk1_7 = results_df__for_overview_all %>%
+  dplyr::filter(scenario == 7 )%>%
+  data.frame()%>%
+  dplyr::select(dateRi, group_letter, BOC)
+
+dfk1_8 = results_df__for_overview_all %>%
+  dplyr::filter(scenario == 8)%>%
+  data.frame()
+
+#the first data line is redundant - for whatever reason - therefore
+dfk1_8_ <- dfk1_8[2:dim(dfk1_8)[1],]
+
+#does not work
+length_of_df <- dim(dfk1_8)[1]
+time0 <- dfk1_8[1]
+#does not work dfk1_8_date_reverse <- dfk1_8$date[order(length_of_df : time0)]
+## Sorting data frames:
+dd <- dfk1_8[ order(dfk1_8$dateRi, decreasing = TRUE),]
+#END #does not work
+
+dd <-as.data.frame(cbind(as.character(dfk1_8$dateRi), factor(dfk1_8$group_letter, levels = c("R", "M", "P", "A")), dfk1_8$BOC)[order(dfk1_8$dateRi, dfk1_8$group_letter, decreasing = c(TRUE, FALSE),   method="radix"),])
+colnames(dd) <- c("dateRi", "group_", "BOC")
+dd$dateRi <- as.Date(dd$dateRi)
+dd$BOC <- as.numeric(dd$BOC)
+#the group_letters have been replaced by numbers and I need to be careful which is which
+dd$group_ <- as.numeric(dd$group_) 
+dd$group_letter <- ifelse(dd$group_ ==  2, "M", ifelse(dd$group_ == 3, "P" , ifelse (dd$group_ == 4, "A", ifelse (dd$group_ == 1, "R", NA))))   
+dd$group_letter <- factor(dd$group_letter , levels = c("R", "M", "P", "A"))
+
+dd_ <- dd%>%
+dplyr::select(-group_)
+
+#plots for checking
+plot(dd$dateRi, dd$BOC)
+(geomplot <- ggplot(data = dd) +
+geom_point(aes(x = dateRi, y = BOC, colour = group_letter)))
+(geomplot <- ggplot(data = dfk1_8) +
+geom_point(aes(x = dateRi, y = BOC, colour = group_letter)))
+#END plots for checking
+
+
+
+
+dd7_8 <- rbind(dfk1_7, dd_)
+#plots for checking
+#(geomplot <- ggplot(data = dd7_8) +
+#geom_point(aes(x = dateRi, y = BOC, colour = group_letter)))
+#END plots for checking
+
+
+(geomplot <- ggplot(data = dd7_8) +
+geom_polygon(aes(x = dateRi, y = BOC, group = group_letter,# color = group_letter, fill = group_letter, 
+alpha = 0.5), show.legend = FALSE)+
+geom_point(data = dfk1_1, aes(x = dateRi, y = BOC, group = group_letter#, color = group_letter
+), show.legend = FALSE,  pch = 21, cex = 0.5)+# from scneario 1 line without alpha drueber
+
+#library does not work on mac
+#scale_fill_okabe_ito()+ 
+ # scale_color_okabe_ito()+
+
+  theme(panel.background = element_rect(fill = "white",  colour = "black",   
+                                        linetype = "solid" ),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(colour = "black"), 
+        axis.text.x = element_text(angle = 45, vjust = 0.4),
+        #axis.title.y = element_textbox_simple(width = NULL#,
+             #                                 orientation = 'left-rotated')
+             )+# necessary for the ylab with library ggtext
+  #does not work on mac #labs(x = "Date", y = "BOC<br> [mol COD L<sup>-1</sup>]")+
+  labs(x = "Date", y = "BOC [mol COD / L]")+
+  scale_x_date(limits = c(t_0, t_max) )+
+scale_fill_discrete(name = "Group", 
+labels = c("R", "M", "P", "A"))+ 
+facet_grid(.~group_letter#, ncol = 4
+)
+     )
+
+  
+ 
+  setwd(gw_FuldaEcosystemServices_plots_path)
+  ggsave(paste0("plot_sensitive_k1_BOC_1_7_8_one_y_scale.png"), width = 8, height = 3)
+  ggsave(paste0("plot_sensitive_k1_BOC_1_7_8_one_y_scale.pdf"), width = 8, height = 3)
+  
+
+#####
+#trend plots with the extreme microbial yield as uncertainty polygon
+#Fig. 5
+######
+
+#microb  yield
+# extreme Scenarios 9 and 10 of the second of the  two  most sensitive parameters, i.e. microbial yield, yielding 
+
+
+dfk1_1 = results_df__for_overview_all %>%
+  dplyr::filter(scenario == 1 )%>%
+  data.frame()%>%
+  dplyr::select(dateRi, group_letter, BOC)
+
+
+dfk1_9 = results_df__for_overview_all %>%
+  dplyr::filter(scenario == 9 )%>%
+  data.frame()%>%
+  dplyr::select(dateRi, group_letter, BOC)
+
+dfk1_10 = results_df__for_overview_all %>%
+  dplyr::filter(scenario == 10)%>%
+  data.frame()
+
+#the first data line is redundant - for whatever reason - therefore
+dfk1_10_ <- dfk1_10[2:dim(dfk1_10)[1],]
+
+
+dd <-as.data.frame(cbind(as.character(dfk1_10$dateRi), factor(dfk1_10$group_letter, levels = c("R", "M", "P", "A")), dfk1_10$BOC)[order(dfk1_10$dateRi, dfk1_10$group_letter, decreasing = c(TRUE, FALSE),   method="radix"),])
+colnames(dd) <- c("dateRi", "group_", "BOC")
+dd$dateRi <- as.Date(dd$dateRi)
+dd$BOC <- as.numeric(dd$BOC)
+#the group_letters have been replaced by numbers and I need to be careful which is which
+dd$group_ <- as.numeric(dd$group_) 
+dd$group_letter <- ifelse(dd$group_ ==  2, "M", ifelse(dd$group_ == 3, "P" , ifelse (dd$group_ == 4, "A", ifelse (dd$group_ == 1, "R", NA))))   
+dd$group_letter <- factor(dd$group_letter , levels = c("R", "M", "P", "A"))
+
+
+dd_ <- dd%>%
+dplyr::select(-group_)
+
+#plots for checking
+(geomplot <- ggplot(data = dd) +
+geom_point(aes(x = dateRi, y = BOC, colour = group_letter)))
+(geomplot <- ggplot(data = dfk1_10) +
+geom_point(aes(x = dateRi, y = BOC, colour = group_letter)))
+#END plots for checking
+
+
+
+#prepare data
+
+dd9_10 <- rbind(dfk1_9, dd_)
+
+#plots for checking
+(geomplot <- ggplot(data = dd9_10) +
+geom_point(aes(x = dateRi, y = BOC, colour = group_letter)))
+#END plots for checking
+
+
+(geomplot <- ggplot(data = dd9_10) +
+geom_polygon(aes(x = dateRi, y = BOC, group = group_letter,# color = group_letter, fill = group_letter, 
+alpha = 0.5), show.legend = FALSE)+
+geom_point(data = dfk1_1, aes(x = dateRi, y = BOC, group = group_letter#, color = group_letter
+), show.legend = FALSE,  pch = 21, cex = 0.5)+# from scneario 1 line without alpha drueber
+
+#library does not work on mac
+#scale_fill_okabe_ito()+ 
+ # scale_color_okabe_ito()+
+
+  theme(panel.background = element_rect(fill = "white",  colour = "black",   
+                                        linetype = "solid" ),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(colour = "black"), 
+        axis.text.x = element_text(angle = 45, vjust = 0.4),
+        #axis.title.y = element_textbox_simple(width = NULL#,
+             #                                 orientation = 'left-rotated')
+             )+# necessary for the ylab with library ggtext
+  labs(x = "Date", y = "BOC [mol COD / L]")+
+  scale_x_date(limits = c(t_0, t_max) )+
+scale_fill_discrete(name = "Group", 
+labels = c("R", "M", "P", "A"))+ 
+facet_grid(.~group_letter#, ncol = 4
+)
+     )
+
+  
+ 
+  setwd(gw_FuldaEcosystemServices_plots_path)
+  ggsave(paste0("plot_sensitive_k1_BOC_1_9_10_one_y_scale.png"), width = 8, height = 3)
+  ggsave(paste0("plot_sensitive_k1_BOC_1_9_10_one_y_scale.pdf"), width = 8, height = 3)
+
+
+#These are the plots with all known 6 lines plus the two extreme ones
+#colors chosen according to https://stackoverflow.com/questions/57153428/r-plot-color-combinations-that-are-colorblind-accessible
+#colours of scenarios 1 to 6 in grey, because they had been shown in detail in previous figures
+results_df__for_overview_all$colour_for_plot <- ifelse(results_df__for_overview_all$scenario == 1, "#1a1b1a",ifelse(results_df__for_overview_all$scenario == 3, "#2c2c2c", ifelse(results_df__for_overview_all$scenario == 5, "#353636", ifelse(results_df__for_overview_all$scenario == 2, "#373838", ifelse(results_df__for_overview_all$scenario == 4, "#009E73", ifelse(results_df__for_overview_all$scenario == 6, "#2d2e2e",
+   ifelse(results_df__for_overview_all$scenario == 7, "#0072B2", 
+   ifelse(results_df__for_overview_all$scenario == 8, "#E69F00", "black"))))))))
+
+results_df__for_overview_all$line <- ifelse(results_df__for_overview_all$scenario == 1, 2,
+ifelse(results_df__for_overview_all$scenario == 3, 2, 
+ifelse(results_df__for_overview_all$scenario == 5, 2,  
+ifelse(results_df__for_overview_all$scenario == 2, 2, 
+ifelse(results_df__for_overview_all$scenario == 4, 2, 
+ifelse(results_df__for_overview_all$scenario == 6, 2, 
+ifelse(results_df__for_overview_all$scenario == 7, 1, 
+ifelse(results_df__for_overview_all$scenario == 8, 1, 1))))))))
+
+results_df__for_overview_all$linewidth <- ifelse(results_df__for_overview_all$scenario == 1, .8,
+ifelse(results_df__for_overview_all$scenario == 3, .8, 
+ifelse(results_df__for_overview_all$scenario == 5, .8,
+ ifelse(results_df__for_overview_all$scenario == 2, .8, 
+ifelse(results_df__for_overview_all$scenario == 4, .8, 
+ifelse(results_df__for_overview_all$scenario == 6, .8, 
+ifelse(results_df__for_overview_all$scenario == 7, 2.1,
+ ifelse(results_df__for_overview_all$scenario == 8, 2.11, 1))))))))
+
+#the two extreme k1 scenarios are plotted on top of the eight scenarios in order to get only their smoothing parameters
+df2 = results_df__for_overview_all %>%
+  dplyr::filter(scenario == 7)%>%
+  data.frame()
+
+df3 = results_df__for_overview_all %>%
+  dplyr::filter(scenario == 8)%>%
+  data.frame()
+
+
+
+
+
+# from here on, smooths with all lines and the  scenarios 7 and 8 on top - k1 - 
+# not content of the paper
+
+
+################## trend plots of the first of the two extreme scenarios of the two most sensitive parameters
+#k1
+#not shown in paper
+my.formula <- y ~ x
+
+(plot_trends_BOC <- ggplot(data = results_df__for_overview_all_1_to_8)+
+    geom_smooth(method = "lm",
+                data = results_df__for_overview_all_1_to_8, aes(x = dateRi, y = BOC, group = as.factor(colour_for_plot)#, #lty =  as.factor(line), lwd = as.factor(linewidth) 
+                ), 
+                se=FALSE,  formula = my.formula, show.legend = FALSE, colour = "grey", lwd = .5
+                 )+ 
+  new_scale_colour() + #requires library(ggnewscale)
+  geom_smooth(method = "lm",
+    (aes(x = dateRi, y = BOC, colour = "k1 minimum (0.0000001)")), 
+             data = df2,# alpha = 0.4, 
+                se=FALSE,  formula = my.formula) +
+  geom_smooth(method = "lm",
+    (aes(x = dateRi, y = BOC, colour = "k1 maximum (1)")),            data = df3, #alpha = 0.4
+                se=FALSE,  formula = my.formula) +
+  scale_colour_discrete(
+    name = ""
+  ) +
+
+    #labs(x = "Date", y = "BOC [mol COD / L]") +
+    labs(x = "Date", y = "BOC [mol COD L<sup>-1</sup>]")+ 
+
+    theme(panel.background = element_rect(fill = "white",  colour = "black", 
+                                          linetype = "solid" ),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.text = element_text(colour = "black"), 
+          axis.text.x = element_text(angle = 45, vjust = 0.4),
+          legend.key = element_blank(), 
+          legend.background=element_blank(),
+          axis.title.y = element_textbox_simple(width = NULL,
+                                             orientation = 'left-rotated')# necessary for the ylab with library ggtext
+    )
+)
+
+
+if (unified_axes == 1) {
+  
+  (plot_trends_BOC <- plot_trends_BOC +
+     facet_wrap(.~group_letter, ncol = 4))
+  
+  setwd(gw_FuldaEcosystemServices_plots_path)
+  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_7_8_one_y_scale.png"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_7_8_one_y_scale.pdf"), width = 8, height = 3)
+  
+}else{
+  (plot_trends_BOC <- plot_trends_BOC+
+     facet_wrap(.~group_letter, scales="free_y", ncol = 4))
+  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_7_8_free_y_scale.png"), width = 8, height = 3)
+  ggsave(paste0("plot_trends_BOC_1_2_3_4_5_6_7_8_free_y_scale.pdf"), width = 8, height = 3)
+}
+
+
+
+#for uncertainty of the microbial yield
+setwd(gw_FuldaEcosystemServices_results_txt_path)
+
+results_df__for_overview_all <- read.table( "results_df__for_overview_all__1_2_3_4_5_6_7_8_9_10.txt", header = TRUE)
+
+results_df__for_overview_all$dateRi <- as.Date(results_df__for_overview_all$dateRi)
+
+results_df__for_overview_all$group_letter <- factor(results_df__for_overview_all$group_letter , levels = c("R", "M", "P", "A"))
+
+#the two extreme microbial yield scenarios are plotted on top of the eight scenarios in order to get only their smoothing parameters
+
+df2 = results_df__for_overview_all %>%
+  dplyr::filter(scenario == 9)%>%
+  data.frame()
+
+df3 = results_df__for_overview_all %>%
+  dplyr::filter(scenario == 10)%>%
+  data.frame()
+
+
+
+
+
 (plot_trends_MO <- ggplot(data = results_df__for_overview_all_1_to_8)+
     geom_smooth(method = "lm",
                 data = results_df__for_overview_all_1_to_8, aes(x = dateRi, y = MO_het, group = as.factor(colour_for_plot)#, #lty =  as.factor(line), lwd = as.factor(linewidth) 
@@ -808,7 +1140,8 @@ if (unified_axes == 1) {
              data = df2,# alpha = 0.4, 
                 se=FALSE,  formula = my.formula) +
   geom_smooth(method = "lm",
-    (aes(x = dateRi, y = BOC, colour = "k1 maximum (1)")),            data = df3, #alpha = 0.4
+    (aes(x = dateRi, y = BOC, colour = "k1 maximum (1)")),            
+data = df3, #alpha = 0.4
                 se=FALSE,  formula = my.formula) +
   scale_colour_discrete(
     name = ""
@@ -856,7 +1189,7 @@ if (unified_axes == 1) {
                 se=FALSE,  formula = my.formula, show.legend = FALSE, colour = "grey", lwd = .5
                  )+ 
    
-  new_scale_colour() + ## requires library(ggnewscale)
+  new_scale_colour() + # requires library(ggnewscale)
   geom_smooth(method = "lm",
    (aes(x = dateRi, y = BOC, colour = "k1 minimum (0.0000001)")), 
              data = df2,# alpha = 0.4, 
@@ -904,9 +1237,6 @@ if (unified_axes == 1) {
 ######
 #trend plots with the extreme Yac microbial yield 
 ######
-#delete todo
-#TODO extreme Scenarios 9 and 10 of the second of the  two  most sensitive parameters, i.e. microbial yield, yielding 
-#TODO Fig.  Figs. X in SI Sx
 
 #the code from here requires reading in the results as in the block marked for outcommenting above 
 setwd(gw_FuldaEcosystemServices_results_txt_path)
@@ -922,30 +1252,22 @@ results_df__for_overview_all_1_to_6_9_10$group_letter <- factor(results_df__for_
 #colors chosen according to https://stackoverflow.com/questions/57153428/r-plot-color-combinations-that-are-colorblind-accessible
 #colours of runs 1 to 6 in grey
 results_df__for_overview_all_1_to_6_9_10$colour_for_plot <- 
-ifelse(results_df__for_overview_all_1_to_6_9_10$run == 1, "#1a1b1a",
-ifelse(results_df__for_overview_all_1_to_6_9_10$run == 3, "#2c2c2c", 
-ifelse(results_df__for_overview_all_1_to_6_9_10$run == 5, "#353636",
- ifelse(results_df__for_overview_all_1_to_6_9_10$run == 2, "#373838", 
-ifelse(results_df__for_overview_all_1_to_6_9_10$run == 4, "#009E73", 
-ifelse(results_df__for_overview_all_1_to_6_9_10$run == 6, "#2d2e2e",
-   ifelse(results_df__for_overview_all_1_to_6_9_10$run == 7, "#0072B2", 
-   ifelse(results_df__for_overview_all_1_to_6_9_10$run == 8, "#E69F00", "black"))))))))
+ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 1, "#1a1b1a",
+ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 3, "#2c2c2c", 
+ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 5, "#353636",
+ ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 2, "#373838", 
+ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 4, "#009E73", 
+ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 6, "#2d2e2e",
+   ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 7, "#0072B2", 
+   ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 8, "#E69F00", "black"))))))))
 
-#does not work results_df__for_overview_all$colour_for_plot <- factor(results_df__for_overview_all$colour_for_plot, level = c("#2f3030" ,"#2f3030" ,"#2f3030" ,"#2f3030" ,"#2f3030" ,"#2f3030" , "#0072B2",   "#E69F00"))
 
-results_df__for_overview_all_1_to_6_9_10$line <- ifelse(results_df__for_overview_all_1_to_6_9_10$run == 1, 2,ifelse(results_df__for_overview_all_1_to_6_9_10$run == 3, 2, ifelse(results_df__for_overview_all_1_to_6_9_10$run == 5, 2,  ifelse(results_df__for_overview_all_1_to_6_9_10$run == 2, 2, ifelse(results_df__for_overview_all_1_to_6_9_10$run == 4, 2, ifelse(results_df__for_overview_all_1_to_6_9_10$run == 6, 2, ifelse(results_df__for_overview_all_1_to_6_9_10$run == 7, 1, ifelse(results_df__for_overview_all_1_to_6_9_10$run == 8, 1, 1))))))))
+results_df__for_overview_all_1_to_6_9_10$line <- ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 1, 2,ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 3, 2, ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 5, 2,  ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 2, 2, ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 4, 2, ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 6, 2, ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 7, 1, ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 8, 1, 1))))))))
 
-#does not work results_df__for_overview_all$line <- factor(results_df__for_overview_all$line, level = c(1, 5, 2,  6, 3,   4))
 
-results_df__for_overview_all_1_to_6_9_10$linewidth <- ifelse(results_df__for_overview_all_1_to_6_9_10$run == 1, .8,ifelse(results_df__for_overview_all_1_to_6_9_10$run == 3, .8, ifelse(results_df__for_overview_all_1_to_6_9_10$run == 5, .8, ifelse(results_df__for_overview_all_1_to_6_9_10$run == 2, .8, ifelse(results_df__for_overview_all_1_to_6_9_10$run == 4, .8, ifelse(results_df__for_overview_all_1_to_6_9_10$run == 6, .8, ifelse(results_df__for_overview_all_1_to_6_9_10$run == 7, 1, ifelse(results_df__for_overview_all_1_to_6_9_10$run == 8, 1.1, 1))))))))
+results_df__for_overview_all_1_to_6_9_10$linewidth <- ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 1, .8,ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 3, .8, ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 5, .8, ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 2, .8, ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 4, .8, ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 6, .8, ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 7, 1, ifelse(results_df__for_overview_all_1_to_6_9_10$scenario == 8, 1.1, 1))))))))
 
-#TODO edelete reudnantn line and inewidth
-#does not workresults_df__for_overview_all$linewidth <- factor(results_df__for_overview_all$linewidth, level = c(1.2, 1.1, .82, .81, .31, .3))
 
-#the following block not used in the end
-#override.col <- c( "#1a1b1a", "#2c2c2c", "#353636", "#373838", "#009E73", "#2d2e2e",  "#0072B2", "#D55E00")
-##override.line <- c(2,2,2,2,2,2, 1, 1)
-#override.linewidth <- c(.8, .81, .82, .83, .84, .85, 1, 1)
 
 ##the following leads to not all line sbeing shown.
 ##how cna i make a legend that contains less elements than groups?
@@ -954,17 +1276,17 @@ results_df__for_overview_all_1_to_6_9_10$linewidth <- ifelse(results_df__for_ove
 #override.linewidth <- c( .8, 1, 1.1)
 ##and this is wrong sequence
 
-#the two extreme microbial yield scenarios are plotted on top of the eight scenarios in order to get only their smoothing parameters
+#the two extreme microbial yield scenarios are plotted on top of the six scenarios in order to get only their smoothing parameters
 
 df2 = results_df__for_overview_all_1_to_6_9_10 %>%
-  dplyr::filter(run == 9)%>%
+  dplyr::filter(scenario == 9)%>%
   data.frame()
 
 df3 = results_df__for_overview_all_1_to_6_9_10 %>%
-  dplyr::filter(run == 10)%>%
+  dplyr::filter(scenario == 10)%>%
   data.frame()
 
-#TODO replace second df2
+
 (plot_trends_BOC <- ggplot(data = results_df__for_overview_all_1_to_6_9_10)+
     geom_smooth(method = "lm",
                 data = results_df__for_overview_all_1_to_6_9_10, aes(x = dateRi, y = BOC, group = as.factor(colour_for_plot)#, #lty =  as.factor(line), lwd = as.factor(linewidth) 
@@ -1027,7 +1349,7 @@ if (unified_axes == 1) {
                 se=FALSE,  formula = my.formula, show.legend = FALSE, colour = "grey", lwd = .5
                  )+ 
    
-  new_scale_colour() +
+  new_scale_colour() + #requires library(ggnewscale)
   geom_smooth(method = "lm",
     (aes(x = dateRi, y = BOC, colour = "Yield minimum (0.001)")), 
              data = df2,# alpha = 0.4, 
@@ -1100,20 +1422,6 @@ if (unified_axes == 1) {
     name = ""
   ) +
 
-#not needed anymore here ?!
-#    scale_colour_manual("Run",values = c("#009E73", "#F0E442", "#0072B2", "#E69F00", "#56B4E9", "#D55E00") ,
-#                        labels = c("Reference", "No fauna", "+1.5°C", "No fauna  +1.5°C", "+3°C", "No fauna +3°C"))+
-#    scale_linetype_manual("Run", values = c(1, 5, 2, 6, 3, 4),
-#                          labels = c("Reference", "No fauna", "+1.5°C", "No fauna  +1.5°C", "+3°C", "No fauna +3°C"))+
-#    scale_linewidth_manual("Run", values = c(1.2, 1.1, .82, .81,  .41,  .4),
-#                           labels = c("Reference", "No fauna", "+1.5°C", "No fauna  +1.5°C", "+3°C", "No fauna +3°C"))+
-#    
-#    guides(colour = guide_legend(override.aes = list(line = override.line, colour = override.col, linewidth = override.linewidth))) +
-#    
-#    #labs(x = "Date", y = "Fauna [mol COD / L]") +
-#    labs(x = "Date", y = "Fauna dry mass [mol COD L<sup>-1</sup>])+ 
-
-
     theme(panel.background = element_rect(fill = "white",  colour = "black", 
                                           linetype = "solid" ),
           panel.grid.major = element_blank(),
@@ -1123,7 +1431,7 @@ if (unified_axes == 1) {
           legend.key = element_blank(), 
           legend.background=element_blank(),
           #install packages
-axis.title.y = element_textbox_simple(width = NULL,
+	  axis.title.y = element_textbox_simple(width = NULL,
                                               orientation = 'left-rotated')# necessary for the ylab with library ggtext
     )+
     #labs(x = "Date", y = "Fauna [mol COD / L]") +
