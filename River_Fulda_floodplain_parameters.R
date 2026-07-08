@@ -1,6 +1,7 @@
 # function which returns ca. 30 variables 
 read_parameters<- function(run){
   
+
   delta_t          = parameters$dt[run] #usually days
   
   max_t          = as.Date(parameters$max_t[run], origin = "1899-12-30") #date - depends on operating system!!
@@ -72,7 +73,7 @@ read_parameters<- function(run){
   
   RECHARGE_COD_mol_per_m3_per_day_df <- data.frame(cbind("dateRi" = as.Date(Fulda_daily_prec$dateRi), RECHARGE_COD_mol_per_m3_per_day))
   
-  RECHARGE_COD_mol_per_m3_per_day_df$dateRi <-Fulda_daily_prec$dateRi
+  RECHARGE_COD_mol_per_m3_per_day_df$dateRi <- Fulda_daily_prec$dateRi #dont be confused - this starts in 1949
   
   growth_model_MO_type <- parameters$growth_model_MO[run]
   growth_model_fauna_type <- parameters$growth_model_fauna[run]
