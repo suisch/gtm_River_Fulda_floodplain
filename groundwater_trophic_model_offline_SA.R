@@ -1,4 +1,5 @@
 made redundant during update for revision - dont use
+use groundwater_trophic_model_SA.R instead
 
 #Load required packages
 library(dplyr)
