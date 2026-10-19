@@ -7,3 +7,4 @@ Original meteorological data (produkt_nieder_tag_19490101_20171231_01526.txt, pr
 
 groundwater_trophic_model.R is the main work horse from v.1.0.0, used in the preprint https://www.biorxiv.org/content/10.1101/2025.07.26.665685v1, and groundwater_trophic_model_SA.R is a development from that, including now a function gtm() and functionality for sensitivity analysis used in updated versions of the manuscript. Both call other functions, variables, and parameters available from, and called from, this repository.
 
+v.2.0.0 is used for the - now accepted - paper with Biogeosciences on https://egusphere.copernicus.org/preprints/2026/egusphere-2025-6523/
